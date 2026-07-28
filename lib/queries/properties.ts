@@ -75,6 +75,35 @@ export async function getOpenPropertiesCount(): Promise<number> {
   return row?.count ?? 0;
 }
 
+export async function getFeaturedProperties(limit = 3): Promise<Property[]> {
+  return db
+    .select()
+    .from(properties)
+    .where(eq(properties.status, "fundraising"))
+    .orderBy(
+      desc(
+        sql`(${properties.amountRaised}::numeric / nullif(${properties.fundingTarget}::numeric, 0))`
+      )
+    )
+    .limit(limit);
+}
+
+export async function getPlatformStats() {
+  const [row] = await db
+    .select({
+      propertyCount: sql<number>`count(*)::int`,
+      totalRaised: sql<string>`coalesce(sum(${properties.amountRaised}), 0)`,
+      avgYield: sql<string>`coalesce(avg(${properties.estAnnualYield}), 0)`,
+    })
+    .from(properties);
+
+  return {
+    propertyCount: row?.propertyCount ?? 0,
+    totalRaised: Number(row?.totalRaised ?? 0),
+    avgYield: Number(row?.avgYield ?? 0),
+  };
+}
+
 export async function getPropertyFilterOptions() {
   const [locationRows, typeRows] = await Promise.all([
     db

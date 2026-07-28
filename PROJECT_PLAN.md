@@ -107,12 +107,14 @@ Verified end-to-end with Playwright against a throwaway local Postgres: filter s
 
 Verified end-to-end with Playwright against a throwaway local Postgres: real slug renders full page + gallery thumbnail switching works, unknown slug 404s, a real form submission produces a `leads` row correctly linked via `property_id`, and mobile layout stacks form below content as specified.
 
-### Step 8 — Home Page
-- [ ] Hero: headline, subtext, primary/secondary CTA, key stats row
-- [ ] How It Works summary (4 steps)
-- [ ] Featured properties (3 cards from DB)
-- [ ] CTA banner
-- [ ] Assembled last from components already built
+### Step 8 — Home Page ✅ done
+- [x] Hero: headline, subtext, primary ("Browse Properties") + secondary ("How It Works") CTA, key stats row — stats are real, computed from the DB (`getPlatformStats()`: property count, total raised, avg. estimated yield), not hardcoded
+- [x] How It Works summary (4 steps, condensed version of the dedicated page, links to it)
+- [x] Featured properties (3 cards from DB, reusing `PropertyCard`; `getFeaturedProperties()` picks the most-funded currently-`fundraising` properties)
+- [x] CTA banner
+- [x] Assembled last from components already built (Navbar/Footer from Step 3, PropertyCard from Step 6)
+
+Verified end-to-end with Playwright against a throwaway local Postgres: real stats render, 3 featured cards render with correct data and images, primary CTA navigates to `/properties`, responsive at desktop and mobile widths, zero console errors.
 
 ### Step 9 — Responsive QA Pass
 - [ ] Every page tested at 375px / 768px / 1440px

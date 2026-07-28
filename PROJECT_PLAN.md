@@ -80,10 +80,10 @@ I can build and run everything locally against a local `.env.local` before any o
 - [x] Migration generated (`drizzle/0000_warm_korvac.sql`) — verified end-to-end against a throwaway local Postgres (Docker); applying to the real Supabase project just needs `DATABASE_URL` in `.env.local`
 - [x] Seed script (`db/seed/seed.ts`, `npm run db:seed`) — 7 sample properties across Mumbai/Bangalore/Pune/Gurgaon/Goa/Hyderabad/Chennai, mixed `fundraising`/`fully_funded`/`closed` status and funding progress; idempotent via `onConflictDoNothing` on slug; images are placeholder `picsum.photos` URLs (swap for real Supabase Storage URLs once photos are uploaded — see Open Questions)
 
-### Step 5 — Static Content Pages
-- [ ] How It Works — 4-step model, expanded detail, FAQs specific to investment mechanics
-- [ ] FAQ — accordion (fractional investing explainer, min ticket, returns, risk disclosures, exits)
-- [ ] Contact — general enquiry form (writes to `leads`, `property_id = null`) + phone/email/WhatsApp links
+### Step 5 — Static Content Pages ✅ done
+- [x] How It Works — 4-step model, expanded detail, FAQs specific to investment mechanics
+- [x] FAQ — accordion (fractional investing explainer, min ticket, returns, risk disclosures, exits)
+- [x] Contact — general enquiry form (React Hook Form + Zod, `lib/actions/leads.ts` server action) writes to `leads` with `property_id = null` + phone/email/WhatsApp links — verified end-to-end (form submit → DB row) with Playwright against a throwaway local Postgres
 
 ### Step 6 — Properties Listing Page
 - [ ] `/properties` — header with live open-properties count (DB query)
@@ -122,8 +122,9 @@ I can build and run everything locally against a local `.env.local` before any o
 ---
 
 ## C. Open Questions / Decisions Needed Later
-- Placeholder property images/content for seed data — stock photos vs. Lorem-Picsum-style placeholders?
-- Exact copy for FAQ / risk disclosures — draft ourselves or do you have legal-reviewed text to drop in?
+- Placeholder property images/content for seed data — decided: `picsum.photos` deterministic placeholders for now (see Step 4); swap for real photos via Supabase Storage before go-live.
+- Exact copy for FAQ / risk disclosures — drafted generic placeholder copy in `app/faq/page.tsx` and the How It Works mechanics FAQ; replace with legal-reviewed text before go-live if your legal team provides it.
+- Contact page phone/email/WhatsApp numbers (`app/contact/page.tsx`) are placeholders (`+91 98765 43210`, `hello@gharshare.in`) — replace with real team contact details.
 - Domain name — not needed until go-live, flagged here so it's not forgotten.
 
 ---

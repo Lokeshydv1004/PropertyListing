@@ -24,7 +24,7 @@
 | Database | Supabase Postgres (Free) |
 | ORM | Drizzle |
 | Image storage | Supabase Storage |
-| Email | Resend (Free) |
+| Email | ~~Resend~~ — descoped by decision (2026-07-28): leads are captured in the `leads` table only; no email notifications. The team reviews new leads directly via the Supabase dashboard. |
 
 Cost: $0/month + ~$10–15/yr domain when going live.
 
@@ -46,7 +46,7 @@ Each step should end in a working, deployable state where reasonably possible �
 Before I can wire up real infra, I need you to create accounts/projects on:
 - [x] GitHub repo for this project — https://github.com/Lokeshydv1004/PropertyListing
 - [x] Supabase project (free tier) — connected via `DATABASE_URL` (transaction pooler) in local `.env.local`; migration + seed applied to the real project
-- [ ] Resend account + API key (can be deferred to Step 10)
+- [x] ~~Resend account + API key~~ — not needed, descoped (see Section 2: leads are DB-only, no email)
 - [ ] Netlify account, linked to the GitHub repo (can be deferred until we have something to deploy)
 
 I can build and run everything locally against a local `.env.local` before any of these exist, except real DB reads/writes. **We can start Step 1 immediately without waiting on these.**
@@ -56,7 +56,7 @@ I can build and run everything locally against a local `.env.local` before any o
 - [x] Install & init shadcn/ui
 - [x] Install Drizzle ORM + `postgres` driver
 - [x] Project structure: `app/`, `components/`, `lib/`, `db/` (schema + client), `drizzle/` (migrations, generated on first `db:generate`)
-- [x] `.env.local.example` with placeholders for Supabase URL/keys, Resend key
+- [x] `.env.local.example` with placeholders for Supabase URL/keys
 - [x] Git init, initial commit
 - [x] Push to GitHub — https://github.com/Lokeshydv1004/PropertyListing
 - [ ] Connect repo to Netlify for auto-deploy (needs Netlify account)
@@ -121,11 +121,11 @@ Verified end-to-end with Playwright against a throwaway local Postgres: real sta
 - [x] Every page tested at 375px / 768px / 1440px — zero breakpoint bugs found; every page already handled mobile/tablet/desktop correctly from the mobile-first build approach used throughout
 - [x] Along the way, redesigned the properties filter bar (user feedback) — clean grid layout, taller controls, "Clear filters"
 
-### Step 10 — Polish ✅ done except email notification
+### Step 10 — Polish ✅ done
 - [x] Loading states (skeletons) for DB-driven pages — `app/properties/loading.tsx`, `app/properties/[slug]/loading.tsx` (route-specific skeletons matching each page's real layout), plus a generic spinner at `app/loading.tsx` (this one is Next's root-level Suspense fallback, which — confirmed via raw HTML stream inspection, not just guessing — briefly flashes on *every* route's cold load, not just "/", so it has to stay content-agnostic rather than being home-page-shaped)
 - [x] Empty states — "No properties match your filters" (Step 6), custom branded 404 page (`app/not-found.tsx`)
 - [x] Form validation error states — Zod + RHF inline messages (Steps 5/7) now also wired to `aria-invalid` so invalid fields get a red border, not just text below
-- [ ] Resend email notification to team on new lead insert — needs a Resend API key from you
+- [x] ~~Resend email notification~~ — descoped by decision (2026-07-28): leads are DB-only. Every Contact and Submit Interest form submission already writes a full row to `leads` (name, phone, email, amount, message, linked `property_id`, `status`), verified end-to-end in Steps 5 and 7 and again in this step's production-build check. The team works leads directly from the Supabase Table Editor (matches the spec's "no dashboard" scope — `leads.status` is there for them to mark new/contacted/closed manually).
 
 Also found and fixed during this pass: the Home page (`/`) was being statically frozen at build time (funding stats/featured properties would never update after deploy) — added `revalidate = 60` so it refreshes at least every minute. Verified everything end-to-end against a **production build** (`next build && next start`) with the real Supabase database, not just dev mode.
 

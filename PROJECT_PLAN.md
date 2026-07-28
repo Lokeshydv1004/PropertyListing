@@ -96,14 +96,16 @@ I can build and run everything locally against a local `.env.local` before any o
 
 Verified end-to-end with Playwright against a throwaway local Postgres: filter selection updates the URL and narrows results correctly, sort changes result order correctly, empty-filter state renders, and the mobile filter drawer opens with all fields. Along the way, fixed: Base UI `Select` showing the raw sentinel value instead of a label, and a client-only hydration mismatch from Base UI's numeric-`inputMode` caret handling (suppressed via `suppressHydrationWarning`, since it's a harmless style-only difference — confirmed via source inspection this isn't from our code).
 
-### Step 7 — Property Detail Page
-- [ ] `/properties/[slug]` dynamic route (SSR/SSG from DB)
-- [ ] Breadcrumb + image gallery
-- [ ] Key stats block: valuation, min. investment, est. yield, horizon
-- [ ] Description + amenities/specs
-- [ ] Submit Interest form (RHF + Zod): name, phone, email, amount, optional message → `leads` table with property `id`
-- [ ] Confirmation state after submit
-- [ ] Mobile: form moves below content instead of sticky sidebar
+### Step 7 — Property Detail Page ✅ done
+- [x] `/properties/[slug]` dynamic route (SSR from DB), returns real Next.js 404 for unknown slugs via `notFound()`
+- [x] Breadcrumb + image gallery (main image + clickable thumbnail strip)
+- [x] Key stats block: valuation, min. investment, est. yield, horizon
+- [x] Description + amenities/specs
+- [x] Submit Interest form (RHF + Zod, `submitInterestLead` server action): name, phone, email, amount (pre-filled with the property's min. investment), optional message → `leads` table with the property's `id`
+- [x] Confirmation state after submit
+- [x] Desktop: form is a sticky sidebar (`lg:sticky`). Mobile: form renders below all property content, not sticky — verified via screenshot
+
+Verified end-to-end with Playwright against a throwaway local Postgres: real slug renders full page + gallery thumbnail switching works, unknown slug 404s, a real form submission produces a `leads` row correctly linked via `property_id`, and mobile layout stacks form below content as specified.
 
 ### Step 8 — Home Page
 - [ ] Hero: headline, subtext, primary/secondary CTA, key stats row

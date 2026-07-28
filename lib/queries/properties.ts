@@ -54,6 +54,18 @@ export async function getProperties(
     .orderBy(...orderBy);
 }
 
+export async function getPropertyBySlug(
+  slug: string
+): Promise<Property | undefined> {
+  const [property] = await db
+    .select()
+    .from(properties)
+    .where(eq(properties.slug, slug))
+    .limit(1);
+
+  return property;
+}
+
 export async function getOpenPropertiesCount(): Promise<number> {
   const [row] = await db
     .select({ count: sql<number>`count(*)::int` })

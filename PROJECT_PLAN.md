@@ -58,7 +58,7 @@ I can build and run everything locally against a local `.env.local` before any o
 - [x] Project structure: `app/`, `components/`, `lib/`, `db/` (schema + client), `drizzle/` (migrations, generated on first `db:generate`)
 - [x] `.env.local.example` with placeholders for Supabase URL/keys, Resend key
 - [x] Git init, initial commit
-- [ ] Push to GitHub (needs repo URL from you)
+- [x] Push to GitHub — https://github.com/Lokeshydv1004/PropertyListing
 - [ ] Connect repo to Netlify for auto-deploy (needs Netlify account)
 
 ### Step 2 — Keep-Alive Workflow ✅ code done, needs live URL
@@ -67,18 +67,18 @@ I can build and run everything locally against a local `.env.local` before any o
 - [ ] Once deployed: add repo secret `SITE_URL` (the Netlify URL) so the workflow has something to ping
 - [ ] Documented fallback: cron-job.org / UptimeRobot as manual alternative if Actions is disabled
 
-### Step 3 — Design System Foundation
-- [ ] Tailwind theme: navy `#16324F` / green `#0EA671` palette, Inter font, spacing scale
-- [ ] Base shadcn components pulled in (Button, Card, Input, Badge, Progress, etc.)
-- [ ] `Navbar` — logo, nav links, CTA, mobile hamburger menu (built mobile-first)
-- [ ] `Footer`
-- [ ] Shared layout (`app/layout.tsx`) wiring Navbar/Footer around all pages
+### Step 3 — Design System Foundation ✅ done
+- [x] Tailwind theme: navy `#16324F` / green `#0EA671` palette, Inter font, spacing scale
+- [x] Base shadcn components pulled in (Button, Card, Input, Badge, Progress, Sheet, etc.)
+- [x] `Navbar` — logo, nav links, CTA, mobile hamburger menu (built mobile-first, verified with Playwright screenshots at 1440px/375px)
+- [x] `Footer`
+- [x] Shared layout (`app/layout.tsx`) wiring Navbar/Footer around all pages
 
-### Step 4 — Database Schema
-- [ ] Drizzle schema: `properties` table (per data model)
-- [ ] Drizzle schema: `leads` table, FK to `properties.id`, nullable for general enquiries
-- [ ] Migration generated + applied to Supabase
-- [ ] Seed script: ~6–8 realistic sample properties with images (placeholder or stock), varied `status`/funding progress for testing filters/sorting
+### Step 4 — Database Schema ✅ done, pending real Supabase URL
+- [x] Drizzle schema: `properties` table (per data model) — done in Step 1
+- [x] Drizzle schema: `leads` table, FK to `properties.id`, nullable for general enquiries — done in Step 1
+- [x] Migration generated (`drizzle/0000_warm_korvac.sql`) — verified end-to-end against a throwaway local Postgres (Docker); applying to the real Supabase project just needs `DATABASE_URL` in `.env.local`
+- [x] Seed script (`db/seed/seed.ts`, `npm run db:seed`) — 7 sample properties across Mumbai/Bangalore/Pune/Gurgaon/Goa/Hyderabad/Chennai, mixed `fundraising`/`fully_funded`/`closed` status and funding progress; idempotent via `onConflictDoNothing` on slug; images are placeholder `picsum.photos` URLs (swap for real Supabase Storage URLs once photos are uploaded — see Open Questions)
 
 ### Step 5 — Static Content Pages
 - [ ] How It Works — 4-step model, expanded detail, FAQs specific to investment mechanics

@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import { SlidersHorizontal } from "lucide-react";
+import { SlidersHorizontal, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -35,6 +35,17 @@ const SORT_OPTIONS = [
 
 const ALL_VALUE = "__all__";
 
+// Params that count as an active *filter* (sort doesn't, since it never
+// narrows results — clearing filters should leave sort order alone).
+const FILTER_KEYS = [
+  "location",
+  "propertyType",
+  "status",
+  "minValuation",
+  "maxValuation",
+  "maxMinInvestment",
+];
+
 export function FilterBar({
   locations,
   propertyTypes,
@@ -42,16 +53,41 @@ export function FilterBar({
   locations: string[];
   propertyTypes: string[];
 }) {
+  const pathname = usePathname();
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const hasActiveFilters = FILTER_KEYS.some((key) => searchParams.has(key));
+
+  function clearFilters() {
+    const params = new URLSearchParams(searchParams.toString());
+    for (const key of FILTER_KEYS) params.delete(key);
+    router.push(`${pathname}?${params.toString()}`, { scroll: false });
+  }
+
   return (
     <>
-      <div className="hidden flex-wrap items-end gap-4 md:flex">
-        <FilterFields locations={locations} propertyTypes={propertyTypes} />
+      <div className="hidden rounded-2xl border border-border bg-secondary/30 p-5 md:block">
+        <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
+          <FilterFields locations={locations} propertyTypes={propertyTypes} />
+        </div>
+        {hasActiveFilters && (
+          <div className="mt-4 flex justify-end">
+            <Button
+              variant="ghost"
+              onClick={clearFilters}
+              className="gap-1.5 text-muted-foreground"
+            >
+              <X className="size-4" />
+              Clear filters
+            </Button>
+          </div>
+        )}
       </div>
 
-      <div className="md:hidden">
+      <div className="flex items-center gap-3 md:hidden">
         <Sheet>
           <SheetTrigger
-            render={<Button variant="outline" className="gap-2" />}
+            render={<Button variant="outline" className="h-10 gap-2" />}
           >
             <SlidersHorizontal className="size-4" />
             Filters
@@ -60,7 +96,7 @@ export function FilterBar({
             <SheetHeader>
               <SheetTitle>Filters</SheetTitle>
             </SheetHeader>
-            <div className="flex flex-col gap-4 px-4 pb-6">
+            <div className="grid grid-cols-1 gap-4 px-4 pb-6">
               <FilterFields
                 locations={locations}
                 propertyTypes={propertyTypes}
@@ -68,6 +104,16 @@ export function FilterBar({
             </div>
           </SheetContent>
         </Sheet>
+        {hasActiveFilters && (
+          <Button
+            variant="ghost"
+            onClick={clearFilters}
+            className="h-10 gap-1.5 text-muted-foreground"
+          >
+            <X className="size-4" />
+            Clear
+          </Button>
+        )}
       </div>
     </>
   );
@@ -96,13 +142,13 @@ function FilterFields({
 
   return (
     <>
-      <div className="flex min-w-40 flex-col gap-1.5">
+      <div className="flex flex-col gap-1.5">
         <Label>Location</Label>
         <Select
           value={searchParams.get("location") ?? ALL_VALUE}
           onValueChange={(value) => updateParam("location", value)}
         >
-          <SelectTrigger>
+          <SelectTrigger className="!h-10 w-full">
             <SelectValue>
               {(value: string) => (value === ALL_VALUE ? "All locations" : value)}
             </SelectValue>
@@ -118,13 +164,13 @@ function FilterFields({
         </Select>
       </div>
 
-      <div className="flex min-w-40 flex-col gap-1.5">
+      <div className="flex flex-col gap-1.5">
         <Label>Property type</Label>
         <Select
           value={searchParams.get("propertyType") ?? ALL_VALUE}
           onValueChange={(value) => updateParam("propertyType", value)}
         >
-          <SelectTrigger>
+          <SelectTrigger className="!h-10 w-full">
             <SelectValue>
               {(value: string) => (value === ALL_VALUE ? "All types" : value)}
             </SelectValue>
@@ -140,13 +186,13 @@ function FilterFields({
         </Select>
       </div>
 
-      <div className="flex min-w-40 flex-col gap-1.5">
+      <div className="flex flex-col gap-1.5">
         <Label>Funding status</Label>
         <Select
           value={searchParams.get("status") ?? ALL_VALUE}
           onValueChange={(value) => updateParam("status", value)}
         >
-          <SelectTrigger>
+          <SelectTrigger className="!h-10 w-full">
             <SelectValue>
               {(value: string) =>
                 STATUS_OPTIONS.find((option) => option.value === value)
@@ -165,32 +211,13 @@ function FilterFields({
         </Select>
       </div>
 
-      <div className="flex gap-3">
-        <NumberField
-          label="Min. valuation (₹)"
-          paramKey="minValuation"
-          updateParam={updateParam}
-        />
-        <NumberField
-          label="Max. valuation (₹)"
-          paramKey="maxValuation"
-          updateParam={updateParam}
-        />
-      </div>
-
-      <NumberField
-        label="Max. min. investment (₹)"
-        paramKey="maxMinInvestment"
-        updateParam={updateParam}
-      />
-
-      <div className="flex min-w-40 flex-col gap-1.5">
+      <div className="flex flex-col gap-1.5">
         <Label>Sort by</Label>
         <Select
           value={searchParams.get("sort") ?? "newest"}
           onValueChange={(value) => updateParam("sort", value)}
         >
-          <SelectTrigger>
+          <SelectTrigger className="!h-10 w-full">
             <SelectValue>
               {(value: string) =>
                 SORT_OPTIONS.find((option) => option.value === value)
@@ -207,6 +234,22 @@ function FilterFields({
           </SelectContent>
         </Select>
       </div>
+
+      <NumberField
+        label="Min. valuation (₹)"
+        paramKey="minValuation"
+        updateParam={updateParam}
+      />
+      <NumberField
+        label="Max. valuation (₹)"
+        paramKey="maxValuation"
+        updateParam={updateParam}
+      />
+      <NumberField
+        label="Max. min. investment (₹)"
+        paramKey="maxMinInvestment"
+        updateParam={updateParam}
+      />
     </>
   );
 }
@@ -243,7 +286,7 @@ function NumberField({
   }, [value, urlValue, paramKey, updateParam]);
 
   return (
-    <div className="flex min-w-32 flex-1 flex-col gap-1.5">
+    <div className="flex flex-col gap-1.5">
       <Label>{label}</Label>
       <Input
         type="text"
@@ -253,6 +296,8 @@ function NumberField({
         // client-only touch/virtual-keyboard detection, which SSR can't
         // know — harmless style-only hydration mismatch.
         suppressHydrationWarning
+        placeholder="Any"
+        className="!h-10"
         value={value}
         onChange={(e) => {
           const digitsOnly = e.target.value.replace(/[^0-9]/g, "");

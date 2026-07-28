@@ -55,7 +55,12 @@ export function ContactForm() {
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-5" noValidate>
       <div className="space-y-2">
         <Label htmlFor="name">Full name</Label>
-        <Input id="name" placeholder="Your name" {...register("name")} />
+        <Input
+          id="name"
+          placeholder="Your name"
+          aria-invalid={!!errors.name}
+          {...register("name")}
+        />
         {errors.name && (
           <p className="text-sm text-destructive">{errors.name.message}</p>
         )}
@@ -64,7 +69,12 @@ export function ContactForm() {
       <div className="grid gap-5 sm:grid-cols-2">
         <div className="space-y-2">
           <Label htmlFor="phone">Phone number</Label>
-          <Input id="phone" placeholder="+91 98765 43210" {...register("phone")} />
+          <Input
+            id="phone"
+            placeholder="+91 98765 43210"
+            aria-invalid={!!errors.phone}
+            {...register("phone")}
+          />
           {errors.phone && (
             <p className="text-sm text-destructive">{errors.phone.message}</p>
           )}
@@ -75,6 +85,7 @@ export function ContactForm() {
             id="email"
             type="email"
             placeholder="you@example.com"
+            aria-invalid={!!errors.email}
             {...register("email")}
           />
           {errors.email && (
@@ -89,6 +100,7 @@ export function ContactForm() {
           id="message"
           rows={4}
           placeholder="Tell us what you're looking for..."
+          aria-invalid={!!errors.message}
           {...register("message")}
         />
         {errors.message && (

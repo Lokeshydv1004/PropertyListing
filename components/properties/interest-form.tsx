@@ -67,7 +67,12 @@ export function InterestForm({
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-4" noValidate>
       <div className="space-y-2">
         <Label htmlFor="interest-name">Full name</Label>
-        <Input id="interest-name" placeholder="Your name" {...register("name")} />
+        <Input
+          id="interest-name"
+          placeholder="Your name"
+          aria-invalid={!!errors.name}
+          {...register("name")}
+        />
         {errors.name && (
           <p className="text-sm text-destructive">{errors.name.message}</p>
         )}
@@ -78,6 +83,7 @@ export function InterestForm({
         <Input
           id="interest-phone"
           placeholder="+91 98765 43210"
+          aria-invalid={!!errors.phone}
           {...register("phone")}
         />
         {errors.phone && (
@@ -91,6 +97,7 @@ export function InterestForm({
           id="interest-email"
           type="email"
           placeholder="you@example.com"
+          aria-invalid={!!errors.email}
           {...register("email")}
         />
         {errors.email && (
@@ -107,6 +114,7 @@ export function InterestForm({
           pattern="[0-9]*"
           suppressHydrationWarning
           placeholder="e.g. 250000"
+          aria-invalid={!!errors.amountInterested}
           {...register("amountInterested")}
         />
         {errors.amountInterested && (
@@ -122,6 +130,7 @@ export function InterestForm({
           id="interest-message"
           rows={3}
           placeholder="Any questions for our team?"
+          aria-invalid={!!errors.message}
           {...register("message")}
         />
         {errors.message && (

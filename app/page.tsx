@@ -4,6 +4,11 @@ import { FeaturedProperties } from "@/components/home/featured-properties";
 import { CtaBanner } from "@/components/home/cta-banner";
 import { getFeaturedProperties, getPlatformStats } from "@/lib/queries/properties";
 
+// Without this, Next statically freezes this page (funding stats,
+// featured properties) at build time instead of fetching fresh data —
+// wrong for a page whose whole point is live funding progress.
+export const revalidate = 60;
+
 export default async function Home() {
   const [stats, featuredProperties] = await Promise.all([
     getPlatformStats(),

@@ -117,15 +117,17 @@ Verified end-to-end with Playwright against a throwaway local Postgres: real slu
 
 Verified end-to-end with Playwright against a throwaway local Postgres: real stats render, 3 featured cards render with correct data and images, primary CTA navigates to `/properties`, responsive at desktop and mobile widths, zero console errors.
 
-### Step 9 — Responsive QA Pass
-- [ ] Every page tested at 375px / 768px / 1440px
-- [ ] Fix breakpoint issues, tap targets, overflow
+### Step 9 — Responsive QA Pass ✅ done
+- [x] Every page tested at 375px / 768px / 1440px — zero breakpoint bugs found; every page already handled mobile/tablet/desktop correctly from the mobile-first build approach used throughout
+- [x] Along the way, redesigned the properties filter bar (user feedback) — clean grid layout, taller controls, "Clear filters"
 
-### Step 10 — Polish
-- [ ] Loading states (skeletons) for DB-driven pages
-- [ ] Empty states (no properties match filter, etc.)
-- [ ] Form validation error states
-- [ ] Resend email notification to team on new lead insert
+### Step 10 — Polish ✅ done except email notification
+- [x] Loading states (skeletons) for DB-driven pages — `app/properties/loading.tsx`, `app/properties/[slug]/loading.tsx` (route-specific skeletons matching each page's real layout), plus a generic spinner at `app/loading.tsx` (this one is Next's root-level Suspense fallback, which — confirmed via raw HTML stream inspection, not just guessing — briefly flashes on *every* route's cold load, not just "/", so it has to stay content-agnostic rather than being home-page-shaped)
+- [x] Empty states — "No properties match your filters" (Step 6), custom branded 404 page (`app/not-found.tsx`)
+- [x] Form validation error states — Zod + RHF inline messages (Steps 5/7) now also wired to `aria-invalid` so invalid fields get a red border, not just text below
+- [ ] Resend email notification to team on new lead insert — needs a Resend API key from you
+
+Also found and fixed during this pass: the Home page (`/`) was being statically frozen at build time (funding stats/featured properties would never update after deploy) — added `revalidate = 60` so it refreshes at least every minute. Verified everything end-to-end against a **production build** (`next build && next start`) with the real Supabase database, not just dev mode.
 
 ---
 

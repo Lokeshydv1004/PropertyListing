@@ -1,0 +1,16 @@
+name: Supabase keep-alive
+
+on:
+  schedule:
+    # Every 3 days at 06:00 UTC — well within Supabase's 7-day idle-pause window.
+    - cron: "0 6 */3 * *"
+  workflow_dispatch: {}
+
+jobs:
+  ping-health:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Hit health endpoint
+        run: |
+          curl -fsS "${{ secrets.SITE_URL }}/api/health" \
+            || (echo "Health check failed" && exit 1)

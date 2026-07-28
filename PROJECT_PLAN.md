@@ -51,18 +51,20 @@ Before I can wire up real infra, I need you to create accounts/projects on:
 
 I can build and run everything locally against a local `.env.local` before any of these exist, except real DB reads/writes. **We can start Step 1 immediately without waiting on these.**
 
-### Step 1 — Environment Setup
-- [ ] Scaffold Next.js 15 (App Router, TypeScript, Tailwind) via `create-next-app`
-- [ ] Install & init shadcn/ui
-- [ ] Install Drizzle ORM + `postgres`/`@supabase/supabase-js` driver
-- [ ] Project structure: `app/`, `components/`, `lib/`, `db/` (schema + client), `drizzle/` (migrations)
-- [ ] `.env.local.example` with placeholders for Supabase URL/keys, Resend key
-- [ ] Git init, initial commit, push to GitHub (once repo exists)
-- [ ] Connect repo to Netlify for auto-deploy (once Netlify account exists)
+### Step 1 — Environment Setup ✅ done locally
+- [x] Scaffold Next.js 16 (App Router, TypeScript, Tailwind) via `create-next-app`
+- [x] Install & init shadcn/ui
+- [x] Install Drizzle ORM + `postgres` driver
+- [x] Project structure: `app/`, `components/`, `lib/`, `db/` (schema + client), `drizzle/` (migrations, generated on first `db:generate`)
+- [x] `.env.local.example` with placeholders for Supabase URL/keys, Resend key
+- [x] Git init, initial commit
+- [ ] Push to GitHub (needs repo URL from you)
+- [ ] Connect repo to Netlify for auto-deploy (needs Netlify account)
 
-### Step 2 — Keep-Alive Workflow
-- [ ] `app/api/health/route.ts` — trivial DB read (`select 1` or count from `properties`)
-- [ ] `.github/workflows/keepalive.yml` — scheduled (every 3 days) `curl` against the deployed health endpoint
+### Step 2 — Keep-Alive Workflow ✅ code done, needs live URL
+- [x] `app/api/health/route.ts` — trivial DB read (`select 1`)
+- [x] `.github/workflows/keepalive.yml` — scheduled (every 3 days) `curl` against `${{ secrets.SITE_URL }}/api/health`
+- [ ] Once deployed: add repo secret `SITE_URL` (the Netlify URL) so the workflow has something to ping
 - [ ] Documented fallback: cron-job.org / UptimeRobot as manual alternative if Actions is disabled
 
 ### Step 3 — Design System Foundation

@@ -44,8 +44,8 @@ Each step should end in a working, deployable state where reasonably possible �
 
 ### Step 0 — Prerequisites (needs you)
 Before I can wire up real infra, I need you to create accounts/projects on:
-- [ ] GitHub repo for this project (empty is fine, I can init and push)
-- [ ] Supabase project (free tier) — give me the project URL + anon key + service role key (or you can add them to `.env.local` yourself once I generate the template)
+- [x] GitHub repo for this project — https://github.com/Lokeshydv1004/PropertyListing
+- [x] Supabase project (free tier) — connected via `DATABASE_URL` (transaction pooler) in local `.env.local`; migration + seed applied to the real project
 - [ ] Resend account + API key (can be deferred to Step 10)
 - [ ] Netlify account, linked to the GitHub repo (can be deferred until we have something to deploy)
 
@@ -74,11 +74,12 @@ I can build and run everything locally against a local `.env.local` before any o
 - [x] `Footer`
 - [x] Shared layout (`app/layout.tsx`) wiring Navbar/Footer around all pages
 
-### Step 4 — Database Schema ✅ done, pending real Supabase URL
+### Step 4 — Database Schema ✅ done, live on Supabase
 - [x] Drizzle schema: `properties` table (per data model) — done in Step 1
 - [x] Drizzle schema: `leads` table, FK to `properties.id`, nullable for general enquiries — done in Step 1
-- [x] Migration generated (`drizzle/0000_warm_korvac.sql`) — verified end-to-end against a throwaway local Postgres (Docker); applying to the real Supabase project just needs `DATABASE_URL` in `.env.local`
-- [x] Seed script (`db/seed/seed.ts`, `npm run db:seed`) — 7 sample properties across Mumbai/Bangalore/Pune/Gurgaon/Goa/Hyderabad/Chennai, mixed `fundraising`/`fully_funded`/`closed` status and funding progress; idempotent via `onConflictDoNothing` on slug; images are placeholder `picsum.photos` URLs (swap for real Supabase Storage URLs once photos are uploaded — see Open Questions)
+- [x] Migration (`drizzle/0000_warm_korvac.sql`) applied to the real Supabase project
+- [x] Seed script (`db/seed/seed.ts`, `npm run db:seed`) run against the real project — 7 sample properties across Mumbai/Bangalore/Pune/Gurgaon/Goa/Hyderabad/Chennai, mixed `fundraising`/`fully_funded`/`closed` status and funding progress; idempotent via `onConflictDoNothing` on slug; images are placeholder `picsum.photos` URLs (swap for real Supabase Storage URLs once photos are uploaded — see Open Questions)
+- [x] Verified live: `/api/health` returns ok and `/properties` renders the real seeded data from Supabase
 
 ### Step 5 — Static Content Pages ✅ done
 - [x] How It Works — 4-step model, expanded detail, FAQs specific to investment mechanics

@@ -85,13 +85,16 @@ I can build and run everything locally against a local `.env.local` before any o
 - [x] FAQ — accordion (fractional investing explainer, min ticket, returns, risk disclosures, exits)
 - [x] Contact — general enquiry form (React Hook Form + Zod, `lib/actions/leads.ts` server action) writes to `leads` with `property_id = null` + phone/email/WhatsApp links — verified end-to-end (form submit → DB row) with Playwright against a throwaway local Postgres
 
-### Step 6 — Properties Listing Page
-- [ ] `/properties` — header with live open-properties count (DB query)
-- [ ] Filter bar: location, property type, funding status, price range, min. investment
-- [ ] Sort: newest / most funded / closing soon
-- [ ] Responsive grid: 3-col desktop → 2-col tablet → 1-col mobile
-- [ ] Property card: image, title, location, funding progress bar, % funded, min. investment, est. yield
-- [ ] Mobile: filter bar as collapsible drawer or horizontal scroll
+### Step 6 — Properties Listing Page ✅ done
+- [x] `/properties` — header with live open-properties count (`getOpenPropertiesCount()`, counts `status = 'fundraising'` regardless of active filters) + "Showing X properties" reflecting current filters
+- [x] Filter bar: location, property type, funding status (all populated from distinct DB values), valuation range (min/max), max min.-investment — all drive the URL query string so filters are shareable/bookmarkable and survive back/forward navigation
+- [x] Sort: newest / most funded (SQL ratio `amount_raised/funding_target`) / closing soon
+- [x] Responsive grid: 3-col desktop → 2-col tablet → 1-col mobile
+- [x] Property card: image, status badge, title, location, funding progress bar, % funded, funding target, min. investment, est. yield — currency formatted Indian-style (`lib/format.ts`, e.g. "₹5 Cr", "₹2.5 L")
+- [x] Mobile: filter bar collapses into a "Filters" button opening a bottom Sheet drawer with the same fields
+- [x] Empty state for zero-match filters
+
+Verified end-to-end with Playwright against a throwaway local Postgres: filter selection updates the URL and narrows results correctly, sort changes result order correctly, empty-filter state renders, and the mobile filter drawer opens with all fields. Along the way, fixed: Base UI `Select` showing the raw sentinel value instead of a label, and a client-only hydration mismatch from Base UI's numeric-`inputMode` caret handling (suppressed via `suppressHydrationWarning`, since it's a harmless style-only difference — confirmed via source inspection this isn't from our code).
 
 ### Step 7 — Property Detail Page
 - [ ] `/properties/[slug]` dynamic route (SSR/SSG from DB)

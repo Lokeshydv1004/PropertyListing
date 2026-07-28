@@ -78,8 +78,8 @@ export default function HowItWorksPage() {
         </h1>
         <p className="mt-4 text-lg text-muted-foreground">
           Fractional real estate investment, from browsing a property to
-          earning your first returns — here's exactly what happens at each
-          step.
+          earning your first returns — here&apos;s exactly what happens at
+          each step.
         </p>
       </div>
 

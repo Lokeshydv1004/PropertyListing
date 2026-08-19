@@ -112,12 +112,17 @@ export function AdminShell({
             </SheetContent>
           </Sheet>
 
-          <div className="min-w-0 flex-1">
+          {/* The identity block doubles as the way into your own account —
+              password, and anything else personal rather than team-wide. */}
+          <Link
+            href="/admin/account"
+            className="min-w-0 flex-1 rounded-md px-1 py-0.5 transition-colors hover:bg-muted focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
+          >
             <p className="truncate text-sm font-medium text-navy">{name}</p>
             <p className="truncate text-xs text-muted-foreground">
               {email} · {role}
             </p>
-          </div>
+          </Link>
 
           <Button
             variant="ghost"

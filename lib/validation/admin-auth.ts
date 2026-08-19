@@ -1,11 +1,8 @@
 import { z } from "zod";
 
 /**
- * One field, and it is checked against the allowlist before anything is sent.
- *
- * There is no password to validate because there is no password: the console
- * signs in with an emailed magic link, so the only thing the form collects is
- * where to send it.
+ * The magic-link form: one field, checked against the allowlist before
+ * anything is sent.
  */
 export const adminLoginSchema = z.object({
   email: z
@@ -41,3 +38,50 @@ export function safeNextPath(value: string | null | undefined): string {
 
   return value;
 }
+
+/**
+ * Password sign-in, alongside the magic link rather than instead of it.
+ *
+ * A link costs an inbox round trip every single time, which is tiresome for
+ * someone opening the console five times a day. A password is faster; the
+ * link stays as the way in when the password is forgotten, which is why
+ * there is no separate reset flow to build or maintain.
+ */
+export const adminPasswordLoginSchema = z.object({
+  email: z
+    .string()
+    .trim()
+    .toLowerCase()
+    .email("Enter the email address you were given access with"),
+  password: z.string().min(1, "Enter your password"),
+  next: z.string().optional(),
+});
+
+export type AdminPasswordLoginValues = z.infer<typeof adminPasswordLoginSchema>;
+
+/**
+ * Setting a password, from inside the console.
+ *
+ * Ten characters rather than Supabase's default of six. This password opens
+ * a console holding every lead's name, phone number and email — six
+ * characters is a few hours of offline guessing. Length is the requirement
+ * that actually helps; character-class rules mostly produce "Password1!".
+ *
+ * Enable Leaked Password Protection in the Supabase dashboard alongside this:
+ * it rejects passwords found in known breaches, which is the one check that
+ * catches reuse from somewhere already compromised.
+ */
+export const adminSetPasswordSchema = z
+  .object({
+    password: z
+      .string()
+      .min(10, "Use at least 10 characters")
+      .max(200, "That is longer than it needs to be"),
+    confirm: z.string(),
+  })
+  .refine((values) => values.password === values.confirm, {
+    path: ["confirm"],
+    message: "Those two don't match",
+  });
+
+export type AdminSetPasswordValues = z.infer<typeof adminSetPasswordSchema>;

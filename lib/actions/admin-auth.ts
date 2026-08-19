@@ -6,14 +6,20 @@ import { redirect } from "next/navigation";
 
 import { db } from "@/db/client";
 import { adminUsers } from "@/db/schema";
+import { logActivity } from "@/lib/admin/activity";
+import { requireAdmin } from "@/lib/auth/admin";
 import { checkRateLimit, clientIdentifier } from "@/lib/rate-limit";
 import { SITE } from "@/lib/site-config";
 import { createClient } from "@/lib/supabase/server";
 import { withDbRetry } from "@/lib/with-db-retry";
 import {
   adminLoginSchema,
+  adminPasswordLoginSchema,
+  adminSetPasswordSchema,
   safeNextPath,
   type AdminLoginValues,
+  type AdminPasswordLoginValues,
+  type AdminSetPasswordValues,
 } from "@/lib/validation/admin-auth";
 
 export type AdminAuthResult =
@@ -31,6 +37,8 @@ export type AdminAuthResult =
 const RATE_LIMITED =
   "Too many sign-in attempts. Wait a few minutes and try again.";
 const GENERIC_ERROR = "Could not send the sign-in link. Please try again.";
+const WRONG_CREDENTIALS =
+  "That email and password don't match an account with access.";
 
 /**
  * Where the magic link should land the browser.
@@ -133,6 +141,155 @@ export async function sendAdminMagicLink(
     }
   } catch {
     // console.error("[admin] magic link send threw", error);
+    return { success: false, error: GENERIC_ERROR };
+  }
+
+  return { success: true };
+}
+
+/**
+ * Password sign-in.
+ *
+ * The allowlist is checked twice, for two different reasons. Before the
+ * attempt, so a stranger's password guess never reaches Supabase at all and
+ * the rate limiter sees it first. After it, because an auth user can exist
+ * without an `admin_users` row — anyone who was ever removed from the team
+ * still has Supabase credentials — and that session must not survive the
+ * function returning.
+ *
+ * Both failure paths return the same sentence. "No account with that email"
+ * versus "wrong password" is a free oracle for working out who has access
+ * here, and the magic-link form is deliberately unhelpful in the same way.
+ */
+export async function signInWithAdminPassword(
+  values: AdminPasswordLoginValues
+): Promise<AdminAuthResult> {
+  const parsed = adminPasswordLoginSchema.safeParse(values);
+
+  if (!parsed.success) {
+    return { success: false, error: WRONG_CREDENTIALS };
+  }
+
+  const { email, password } = parsed.data;
+
+  // Tighter than the magic-link limits: a link costs an attacker an inbox
+  // they control, a password costs them nothing but a guess.
+  const identifier = await clientIdentifier();
+  const byIp = checkRateLimit(`admin-password:${identifier}`, {
+    max: 10,
+    windowMs: 10 * 60 * 1000,
+  });
+  const byEmail = checkRateLimit(`admin-password-email:${email}`, {
+    max: 8,
+    windowMs: 10 * 60 * 1000,
+  });
+
+  if (!byIp.ok || !byEmail.ok) {
+    return { success: false, error: RATE_LIMITED };
+  }
+
+  let allowed = false;
+
+  try {
+    const rows = await withDbRetry(() =>
+      db
+        .select({ isActive: adminUsers.isActive })
+        .from(adminUsers)
+        .where(eq(adminUsers.email, email))
+        .limit(1)
+    );
+
+    allowed = Boolean(rows[0]?.isActive);
+  } catch {
+    return { success: false, error: GENERIC_ERROR };
+  }
+
+  if (!allowed) return { success: false, error: WRONG_CREDENTIALS };
+
+  try {
+    const supabase = await createClient();
+
+    const { error } = await supabase.auth.signInWithPassword({
+      email,
+      password,
+    });
+
+    if (error) {
+      // A team member who has only ever used magic links has no password to
+      // get wrong, and telling them so is not a leak — they are already on
+      // the allowlist, which is the part worth protecting.
+      return {
+        success: false,
+        error: /invalid login credentials/i.test(error.message)
+          ? WRONG_CREDENTIALS
+          : error.message,
+      };
+    }
+
+    // The row could have been deactivated between the check above and here,
+    // and `updateUser`-style races aside, this is the cheap belt to the
+    // braces in requireAdmin().
+    await withDbRetry(() =>
+      db
+        .update(adminUsers)
+        .set({ lastSeenAt: new Date() })
+        .where(eq(adminUsers.email, email))
+    );
+  } catch {
+    return { success: false, error: GENERIC_ERROR };
+  }
+
+  return { success: true };
+}
+
+/**
+ * Sets or replaces the signed-in admin's own password.
+ *
+ * Requires a live session, which means the person proved who they were with
+ * a magic link (or their existing password) moments ago. That is what makes
+ * a separate "current password" field unnecessary — and it is why there is
+ * no forgotten-password flow: the magic link already is one.
+ */
+export async function setAdminPassword(
+  values: AdminSetPasswordValues
+): Promise<AdminAuthResult> {
+  const guard = await requireAdmin();
+  if (!guard.ok) return { success: false, error: guard.error };
+
+  const parsed = adminSetPasswordSchema.safeParse(values);
+
+  if (!parsed.success) {
+    return {
+      success: false,
+      error: parsed.error.issues[0]?.message ?? "Check the form and try again.",
+    };
+  }
+
+  try {
+    const supabase = await createClient();
+
+    const { error } = await supabase.auth.updateUser({
+      password: parsed.data.password,
+    });
+
+    if (error) {
+      // Supabase enforces its own rules too — length, and the breach check
+      // if Leaked Password Protection is switched on. Its message is more
+      // specific than anything invented here.
+      return { success: false, error: error.message };
+    }
+
+    await logActivity({
+      actor: guard.user,
+      action: "update",
+      entityType: "admin_user",
+      entityId: guard.user.id,
+      entityLabel: guard.user.name,
+      // The password itself is never recorded, obviously — only that it
+      // changed, and when, and by whom.
+      changedFields: { password: { from: "(set)", to: "(changed)" } },
+    });
+  } catch {
     return { success: false, error: GENERIC_ERROR };
   }
 

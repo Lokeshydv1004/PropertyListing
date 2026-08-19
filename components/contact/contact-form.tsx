@@ -2,9 +2,9 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { CheckCircle2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -17,12 +17,12 @@ import {
 } from "@/lib/validation/contact";
 
 export function ContactForm() {
+  const router = useRouter();
   const [submitError, setSubmitError] = useState<string | null>(null);
-  const [submitted, setSubmitted] = useState(false);
   const {
     register,
     handleSubmit,
-    formState: { errors, isSubmitting },
+    formState: { errors, isSubmitting, isSubmitSuccessful },
   } = useForm<ContactFormValues>({
     resolver: zodResolver(contactFormSchema),
     defaultValues: {
@@ -41,25 +41,12 @@ export function ContactForm() {
       pageUrl: typeof window !== "undefined" ? window.location.href : undefined,
     });
     if (result.success) {
-      setSubmitted(true);
+      // A URL change, not an inline panel — an ad platform cannot attribute a
+      // conversion to a page that never navigates.
+      router.push("/thank-you?type=contact");
     } else {
       setSubmitError(result.error);
     }
-  }
-
-  if (submitted) {
-    return (
-      <div className="flex flex-col items-center gap-3 rounded-2xl border border-border bg-brand-green-light px-6 py-12 text-center">
-        <CheckCircle2 className="size-10 text-brand-green" aria-hidden="true" />
-        <h3 className="text-lg font-semibold text-navy">
-          Thanks for reaching out
-        </h3>
-        <p className="max-w-sm text-muted-foreground">
-          We&apos;ve received your enquiry. A member of our team will get back to
-          you within one business day.
-        </p>
-      </div>
-    );
   }
 
   return (
@@ -117,7 +104,7 @@ export function ContactForm() {
             type="tel"
             inputMode="tel"
             autoComplete="tel"
-            placeholder="98765 43210"
+            placeholder="10-digit mobile number"
             aria-invalid={!!errors.phone}
             {...register("phone")}
           />
@@ -165,10 +152,12 @@ export function ContactForm() {
           the smallest on the site, on the page's only conversion point. */}
       <Button
         type="submit"
-        disabled={isSubmitting}
+        // Stays disabled through the redirect: it is not instant, and a
+        // second submit here creates a duplicate lead.
+        disabled={isSubmitting || isSubmitSuccessful}
         className="h-11 w-full bg-brand-green px-8 text-white hover:bg-brand-green/90 sm:w-auto"
       >
-        {isSubmitting ? "Sending…" : "Send message"}
+        {isSubmitting || isSubmitSuccessful ? "Sending…" : "Send message"}
       </Button>
 
       <p className="text-xs leading-relaxed text-muted-foreground">

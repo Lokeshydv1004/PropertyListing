@@ -2,8 +2,29 @@ import Image from "next/image";
 import Link from "next/link";
 import { ArrowRight, CheckCircle2, Lock, ShieldCheck } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { formatCompactINR } from "@/lib/format";
 
-export function Hero() {
+/**
+ * Claims about our own process, not about our regulatory status.
+ *
+ * These three lines used to read "SEBI Compliant Structure", "Legally
+ * Secured" and "Transparent & Trusted". "SEBI Compliant" is not a badge
+ * anyone can self-award — fractional real estate in India sits under SEBI's
+ * SM REIT framework, and either you hold a registration number you can print
+ * or you are making an unbacked regulatory claim on your home page. Each
+ * statement below describes something we control and can evidence on demand.
+ */
+// const TRUST_POINTS = [
+//   { icon: ShieldCheck, label: "Title-verified properties" },
+//   { icon: Lock, label: "Funds held in escrow" },
+//   { icon: CheckCircle2, label: "Independent legal due diligence" },
+// ];
+
+export function Hero({ minTicket }: { minTicket: number | null }) {
+  // The copy used to promise "as little as ₹1 Lakh" while the cheapest live
+  // listing was ₹2 L. A visitor who clicks that promise and finds a ₹2.5 L
+  // minimum feels baited, so the figure comes from the catalogue itself.
+  const ticketCopy = minTicket ? formatCompactINR(minTicket) : "a fraction of the cost";
   return (
     <section className="relative -mt-16 overflow-hidden lg:min-h-[530px] bg-[#032E24]">
       <div className="absolute inset-0">
@@ -41,8 +62,8 @@ export function Hero() {
           </h1>
 
           <p className="mt-4 max-w-[430px] text-base leading-[1.45] text-[#D5DDD9]">
-            Invest in high-quality properties with as little as ₹1 Lakh and
-            earn rental income + potential appreciation.
+            Invest in high-quality properties from {ticketCopy} and earn
+            rental income + potential appreciation.
           </p>
 
           <div className="mt-6 flex flex-col gap-3 sm:flex-row">
@@ -52,7 +73,7 @@ export function Hero() {
               className="h-[46px] gap-2 bg-gold px-5 text-sm text-navy hover:bg-gold/90"
             >
               Explore Investment Opportunities
-              <ArrowRight className="size-4" />
+              <ArrowRight className="size-4" aria-hidden="true" />
             </Button>
             <Button
               render={<Link href="/how-it-works" />}
@@ -63,21 +84,24 @@ export function Hero() {
               See How It Works
             </Button>
           </div>
-
+{/* 
           <div className="mt-6 flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center sm:gap-x-7 sm:gap-y-2">
-            <div className="flex items-center gap-1.5 text-[13px] text-white">
-              <ShieldCheck className="size-3.5 text-gold" />
-              SEBI Compliant Structure
-            </div>
-            <div className="flex items-center gap-1.5 text-[13px] text-white">
-              <Lock className="size-3.5 text-gold" />
-              Legally Secured
-            </div>
-            <div className="flex items-center gap-1.5 text-[13px] text-white">
-              <CheckCircle2 className="size-3.5 text-gold" />
-              Transparent &amp; Trusted
-            </div>
-          </div>
+            {TRUST_POINTS.map((point) => {
+              const Icon = point.icon;
+              return (
+                <div
+                  key={point.label}
+                  className="flex items-center gap-1.5 text-[13px] text-white"
+                >
+                  <Icon
+                    className="size-3.5 shrink-0 text-gold"
+                    aria-hidden="true"
+                  />
+                  {point.label}
+                </div>
+              );
+            })}
+          </div> */}
         </div>
       </div>
     </section>

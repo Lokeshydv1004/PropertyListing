@@ -172,3 +172,58 @@ leads
   status              enum: new | contacted | closed
   created_at          timestamp
 ```
+
+---
+
+# Addendum — audit remediation (19 August 2026)
+
+The sections above are the original build plan and are kept as a record of
+what was decided when. Several of those decisions have since been superseded
+by the work in `reports/WEBSITE_AUDIT.md`. Where this addendum and the plan
+above disagree, this addendum is current.
+
+## Decisions reversed
+
+| Original decision | Now |
+| --- | --- |
+| Lead notifications descoped; team reads the Supabase dashboard | `lib/notify.ts` posts to `LEAD_WEBHOOK_URL` (Slack/Discord/Telegram-compatible). Unset means it no-ops silently and leads still save. Reversed because response speed is the largest single driver of lead conversion, and a Saturday-night lead sat unseen until Monday. |
+| `getFeaturedProperties()` ranks by funding progress descending | Ranks `is_featured` first, then funding progress **ascending**. The old order promoted the raises closest to closing — the ones needing promotion least. |
+| Seed writes `picsum.photos` placeholder images | Seeds empty image arrays. `PropertyImage` renders an honest "Photos coming soon" panel. A stock photograph on a listing is a representation about the asset, not a neutral placeholder. **Rows already in the live database still hold picsum URLs — clear them before launch.** |
+| Inline success states on both forms | Both redirect to `/thank-you`, so ad platforms have a URL change to attribute a conversion to. |
+
+## Routes added since the plan
+
+`/about` · `/list-your-property` · `/insights` (+ `/insights/[slug]`) ·
+`/privacy` · `/terms` · `/risk-disclosure` · `/thank-you` · `app/error.tsx` ·
+`app/sitemap.ts` · `app/robots.ts` · `app/opengraph-image.tsx` ·
+`app/properties/[slug]/opengraph-image.tsx` · `app/icon.svg` · `app/apple-icon.tsx`
+
+## Schema changes since the plan
+
+The table sketches at the end of the original plan are out of date. `db/schema/`
+is the source of truth. Migrations added since:
+
+- `0004_lead_attribution` — `leads` gains `enquiry_type`, `source`, `page_url`,
+  `utm_*`, `contacted_at`, `notes`.
+- `0005` — `properties` gains fee transparency (`platform_fee_pct`,
+  `management_fee_pct`, `exit_fee_pct`), `occupancy_rate`, tenant detail
+  (`tenant_name`, `lease_end_date`), coordinates, `documents[]`,
+  `property_risks[]`, `managed_by`, `year_built`, `is_featured`.
+
+All of `0005` is additive and nullable or defaulted; it has been applied to the
+live database.
+
+## Stale references in the plan above
+
+- `property-card-skeleton.tsx` was deleted; the equivalent is
+  `property-list-card-skeleton.tsx`.
+- The `/properties` "Showing X properties" line described in Step 6 did not
+  exist in the shipped page. It does now.
+
+## Outstanding before launch
+
+Search the codebase for `TODO(pre-launch)`. The blocking ones are listed in
+`README.md` under "Before you send traffic" — contact details, fee figures,
+the About page's team and story, legal review of `/privacy`, `/terms` and
+`/risk-disclosure`, professional review of the `/insights` drafts (all
+currently `noindex`), and real property photographs.

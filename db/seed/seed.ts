@@ -3,11 +3,26 @@ config({ path: ".env.local" });
 
 import type { NewProperty } from "../schema";
 
-function placeholderImages(slug: string, count: number) {
-  return Array.from(
-    { length: count },
-    (_, i) => `https://picsum.photos/seed/${slug}-${i}/1200/800`
-  );
+/**
+ * Listings seed with NO photographs, deliberately.
+ *
+ * This used to return `https://picsum.photos/seed/<slug>-<n>/1200/800` —
+ * random stock photographs. On the live site that rendered "Powai Lakeview
+ * Towers, Mumbai" over a picture of a forest track. On a page representing a
+ * real asset a mismatched photograph is not a neutral placeholder: it is a
+ * representation about the property, and it is the fastest way to convince a
+ * cautious investor that the whole listing is fabricated.
+ *
+ * `PropertyImage` renders an honest "Photos coming soon" panel for an empty
+ * array, so the absence is handled everywhere images appear. Replace this
+ * with real Supabase Storage URLs — that hostname is already allow-listed in
+ * next.config.ts — as each property is photographed.
+ *
+ * NOTE: this only affects future seeds. Rows already in the live database
+ * still hold picsum URLs; clear those before launch.
+ */
+function placeholderImages(): string[] {
+  return [];
 }
 
 const SAMPLE_PROPERTIES: NewProperty[] = [
@@ -27,7 +42,7 @@ const SAMPLE_PROPERTIES: NewProperty[] = [
     investmentHorizon: "5 years",
     fundingDeadline: "2026-10-15",
     status: "fundraising",
-    images: placeholderImages("skyline-residency-bandra", 4),
+    images: placeholderImages(),
     amenities: ["24/7 Security", "Power Backup", "Covered Parking", "Gym"],
     bedrooms: 3,
     areaSqft: "1850",
@@ -51,7 +66,7 @@ const SAMPLE_PROPERTIES: NewProperty[] = [
     investmentHorizon: "7 years",
     fundingDeadline: "2026-04-01",
     status: "fully_funded",
-    images: placeholderImages("whitefield-tech-park-suites", 5),
+    images: placeholderImages(),
     amenities: ["Cafeteria", "Conference Rooms", "High-Speed Internet", "Parking"],
     bedrooms: null,
     areaSqft: "12000",
@@ -75,7 +90,7 @@ const SAMPLE_PROPERTIES: NewProperty[] = [
     investmentHorizon: "6 years",
     fundingDeadline: "2026-12-20",
     status: "fundraising",
-    images: placeholderImages("koregaon-park-villas", 4),
+    images: placeholderImages(),
     amenities: ["Private Garden", "Clubhouse", "Swimming Pool", "24/7 Security"],
     bedrooms: 4,
     areaSqft: "3200",
@@ -99,7 +114,7 @@ const SAMPLE_PROPERTIES: NewProperty[] = [
     investmentHorizon: "7 years",
     fundingDeadline: "2026-11-30",
     status: "fundraising",
-    images: placeholderImages("cyber-city-business-hub", 5),
+    images: placeholderImages(),
     amenities: ["Food Court", "Conference Rooms", "EV Charging", "Metro Connectivity"],
     bedrooms: null,
     areaSqft: "25000",
@@ -123,7 +138,7 @@ const SAMPLE_PROPERTIES: NewProperty[] = [
     investmentHorizon: "5 years",
     fundingDeadline: "2026-02-28",
     status: "closed",
-    images: placeholderImages("candolim-beachside-residences", 4),
+    images: placeholderImages(),
     amenities: ["Private Pool", "Beach Access", "Housekeeping", "Managed Rentals"],
     bedrooms: 2,
     areaSqft: "1400",
@@ -147,7 +162,7 @@ const SAMPLE_PROPERTIES: NewProperty[] = [
     investmentHorizon: "8 years",
     fundingDeadline: "2027-01-15",
     status: "fundraising",
-    images: placeholderImages("gachibowli-financial-square", 4),
+    images: placeholderImages(),
     amenities: ["Anchor Tenant", "Cafeteria", "Parking", "Backup Power"],
     bedrooms: null,
     areaSqft: "18000",
@@ -171,7 +186,7 @@ const SAMPLE_PROPERTIES: NewProperty[] = [
     investmentHorizon: "6 years",
     fundingDeadline: "2026-09-10",
     status: "fundraising",
-    images: placeholderImages("adyar-riverside-apartments", 4),
+    images: placeholderImages(),
     amenities: ["River View", "Gym", "Children's Play Area", "Covered Parking"],
     bedrooms: 3,
     areaSqft: "1650",
@@ -195,7 +210,7 @@ const SAMPLE_PROPERTIES: NewProperty[] = [
     investmentHorizon: "6 years",
     fundingDeadline: "2026-11-05",
     status: "fundraising",
-    images: placeholderImages("powai-lakeview-towers", 4),
+    images: placeholderImages(),
     amenities: ["Lake View", "Clubhouse", "Gym", "24/7 Security"],
     bedrooms: 2,
     areaSqft: "1200",
@@ -219,7 +234,7 @@ const SAMPLE_PROPERTIES: NewProperty[] = [
     investmentHorizon: "8 years",
     fundingDeadline: "2027-02-10",
     status: "fundraising",
-    images: placeholderImages("electronic-city-innovation-park", 5),
+    images: placeholderImages(),
     amenities: ["Food Court", "EV Charging", "Conference Rooms", "Parking"],
     bedrooms: null,
     areaSqft: "20000",
@@ -243,7 +258,7 @@ const SAMPLE_PROPERTIES: NewProperty[] = [
     investmentHorizon: "5 years",
     fundingDeadline: "2026-10-25",
     status: "fundraising",
-    images: placeholderImages("baner-hilltop-residences", 4),
+    images: placeholderImages(),
     amenities: ["Gym", "Swimming Pool", "Covered Parking", "Power Backup"],
     bedrooms: 2,
     areaSqft: "1100",
@@ -267,7 +282,7 @@ const SAMPLE_PROPERTIES: NewProperty[] = [
     investmentHorizon: "10 years",
     fundingDeadline: "2026-03-01",
     status: "fully_funded",
-    images: placeholderImages("golf-course-road-executive-towers", 5),
+    images: placeholderImages(),
     amenities: ["Anchor Tenant", "Cafeteria", "Valet Parking", "Backup Power"],
     bedrooms: null,
     areaSqft: "30000",
@@ -291,7 +306,7 @@ const SAMPLE_PROPERTIES: NewProperty[] = [
     investmentHorizon: "5 years",
     fundingDeadline: "2026-12-05",
     status: "fundraising",
-    images: placeholderImages("anjuna-hillside-villas", 4),
+    images: placeholderImages(),
     amenities: ["Private Pool", "Hillside View", "Housekeeping", "Managed Rentals"],
     bedrooms: 3,
     areaSqft: "1800",
@@ -315,7 +330,7 @@ const SAMPLE_PROPERTIES: NewProperty[] = [
     investmentHorizon: "7 years",
     fundingDeadline: "2026-09-18",
     status: "fundraising",
-    images: placeholderImages("hitec-city-corporate-center", 4),
+    images: placeholderImages(),
     amenities: ["Food Court", "Conference Rooms", "Metro Connectivity", "Parking"],
     bedrooms: null,
     areaSqft: "16500",
@@ -339,7 +354,7 @@ const SAMPLE_PROPERTIES: NewProperty[] = [
     investmentHorizon: "6 years",
     fundingDeadline: "2026-01-20",
     status: "closed",
-    images: placeholderImages("anna-nagar-garden-homes", 4),
+    images: placeholderImages(),
     amenities: ["Garden", "Gym", "Covered Parking", "24/7 Security"],
     bedrooms: 3,
     areaSqft: "1750",
@@ -363,7 +378,7 @@ const SAMPLE_PROPERTIES: NewProperty[] = [
     investmentHorizon: "6 years",
     fundingDeadline: "2026-10-30",
     status: "fundraising",
-    images: placeholderImages("vasant-kunj-signature-residences", 4),
+    images: placeholderImages(),
     amenities: ["Landscaped Gardens", "Clubhouse", "Gym", "24/7 Security"],
     bedrooms: 3,
     areaSqft: "2100",
@@ -387,7 +402,7 @@ const SAMPLE_PROPERTIES: NewProperty[] = [
     investmentHorizon: "7 years",
     fundingDeadline: "2027-01-05",
     status: "fundraising",
-    images: placeholderImages("sector-62-noida-business-park", 4),
+    images: placeholderImages(),
     amenities: ["Food Court", "Metro Connectivity", "Parking", "Backup Power"],
     bedrooms: null,
     areaSqft: "14000",
@@ -411,7 +426,7 @@ const SAMPLE_PROPERTIES: NewProperty[] = [
     investmentHorizon: "6 years",
     fundingDeadline: "2026-11-22",
     status: "fundraising",
-    images: placeholderImages("salt-lake-sector-v-tech-towers", 4),
+    images: placeholderImages(),
     amenities: ["Cafeteria", "Conference Rooms", "Parking", "Power Backup"],
     bedrooms: null,
     areaSqft: "11000",
@@ -435,7 +450,7 @@ const SAMPLE_PROPERTIES: NewProperty[] = [
     investmentHorizon: "5 years",
     fundingDeadline: "2026-12-12",
     status: "fundraising",
-    images: placeholderImages("malviya-nagar-heritage-court", 4),
+    images: placeholderImages(),
     amenities: ["Gym", "Children's Play Area", "Covered Parking", "24/7 Security"],
     bedrooms: 2,
     areaSqft: "1300",
@@ -459,7 +474,7 @@ const SAMPLE_PROPERTIES: NewProperty[] = [
     investmentHorizon: "7 years",
     fundingDeadline: "2026-02-14",
     status: "fully_funded",
-    images: placeholderImages("sg-highway-corporate-plaza", 4),
+    images: placeholderImages(),
     amenities: ["Food Court", "Conference Rooms", "Parking", "Backup Power"],
     bedrooms: null,
     areaSqft: "13000",
@@ -483,7 +498,7 @@ const SAMPLE_PROPERTIES: NewProperty[] = [
     investmentHorizon: "6 years",
     fundingDeadline: "2026-11-15",
     status: "fundraising",
-    images: placeholderImages("marine-drive-panoramic-suites", 4),
+    images: placeholderImages(),
     amenities: ["Waterfront View", "Gym", "Clubhouse", "Covered Parking"],
     bedrooms: 3,
     areaSqft: "1900",
@@ -501,7 +516,7 @@ async function seed() {
   const { properties } = await import("../schema");
   const { sql } = await import("drizzle-orm");
 
-  console.log(`Seeding ${SAMPLE_PROPERTIES.length} properties...`);
+  // console.log(`Seeding ${SAMPLE_PROPERTIES.length} properties...`);
 
   await db
     .insert(properties)
@@ -531,11 +546,11 @@ async function seed() {
       },
     });
 
-  console.log("Seed complete.");
+  // console.log("Seed complete.");
   process.exit(0);
 }
 
 seed().catch((error) => {
-  console.error("Seed failed:", error);
+  // console.error("Seed failed:", error);
   process.exit(1);
 });

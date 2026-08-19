@@ -36,6 +36,41 @@
       "when": 1787080119348,
       "tag": "0004_lead_attribution",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1787131756055,
+      "tag": "0005_lively_captain_marvel",
+      "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1787147173041,
+      "tag": "0006_closed_bloodscream",
+      "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1787148934362,
+      "tag": "0007_brave_umar",
+      "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1787150005626,
+      "tag": "0008_steady_wonder_man",
+      "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1787168195104,
+      "tag": "0009_rls_and_indexes",
+      "breakpoints": true
     }
   ]
 }

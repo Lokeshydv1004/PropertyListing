@@ -558,7 +558,7 @@ async function seedCommercial() {
   /** `excluded.<column>` for upsert SET clauses. */
   const excluded = (column: string) => sql.raw(`excluded.${column}`);
 
-  console.log(`Seeding ${SAMPLE_BUILDINGS.length} buildings...`);
+  // console.log(`Seeding ${SAMPLE_BUILDINGS.length} buildings...`);
 
   await db
     .insert(buildings)
@@ -586,7 +586,7 @@ async function seedCommercial() {
     buildingId: buildingSlug ? idBySlug.get(buildingSlug) ?? null : null,
   }));
 
-  console.log(`Seeding ${units.length} commercial / retail units...`);
+  // console.log(`Seeding ${units.length} commercial / retail units...`);
 
   for (const unit of units) {
     await db
@@ -604,14 +604,14 @@ async function seedCommercial() {
     })
     .from(properties);
 
-  console.log(
-    `Done. ${totals.total} properties total — ` +
-      `${totals.fractional} fractional, ${totals.sale} for sale, ${totals.rent} for rent.`
-  );
+  // console.log(
+  //   `Done. ${totals.total} properties total — ` +
+  //     `${totals.fractional} fractional, ${totals.sale} for sale, ${totals.rent} for rent.`
+  // );
   process.exit(0);
 }
 
 seedCommercial().catch((error) => {
-  console.error("Commercial seed failed:", error);
+  // console.error("Commercial seed failed:", error);
   process.exit(1);
 });

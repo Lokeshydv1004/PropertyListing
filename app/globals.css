@@ -149,3 +149,40 @@
     @apply font-sans;
   }
 }
+/**
+ * An always-visible scrollbar for an inner scroll pane.
+ *
+ * The results column on /properties scrolls independently of the page, and
+ * the platform's default overlay scrollbar only appears while the user is
+ * actively scrolling — so there was nothing to indicate the pane was
+ * scrollable at all, or how far through it you were.
+ *
+ * `scrollbar-gutter: stable` reserves the track's width up front, so the
+ * cards don't shift sideways the moment the bar appears. The standard
+ * properties cover Firefox and current Chromium; the ::-webkit rules are the
+ * fallback for older WebKit, which ignores them when the standard ones apply.
+ */
+@layer components {
+  .scroll-pane {
+    scrollbar-width: thin;
+    scrollbar-color: var(--border) transparent;
+    scrollbar-gutter: stable;
+  }
+
+  .scroll-pane::-webkit-scrollbar {
+    width: 8px;
+  }
+
+  .scroll-pane::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  .scroll-pane::-webkit-scrollbar-thumb {
+    background-color: var(--border);
+    border-radius: 9999px;
+  }
+
+  .scroll-pane::-webkit-scrollbar-thumb:hover {
+    background-color: var(--muted-foreground);
+  }
+}

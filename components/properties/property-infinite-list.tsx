@@ -60,6 +60,17 @@ export function PropertyInfiniteList({
     }
   }, [searchParams]);
 
+  /**
+   * `properties.length` is a dependency for a subtle but load-bearing reason.
+   *
+   * An IntersectionObserver fires on threshold *crossings*, not continuously.
+   * Once the sentinel is inside the root margin and stays there, no further
+   * callbacks arrive — so after appending a single page the list stopped
+   * dead. On a phone that reproduced every time: frozen at 12 of 30, sentinel
+   * sitting 35px inside the viewport, exactly one request made. Re-observing
+   * after every append re-runs the initial check and delivers a fresh
+   * callback if the sentinel is still in view.
+   */
   useEffect(() => {
     if (!hasMore || error) return;
     const node = sentinelRef.current;
@@ -71,24 +82,39 @@ export function PropertyInfiniteList({
           loadMore();
         }
       },
-      { rootMargin: "600px" }
+      // Tighter than it was: with re-observation after every append, a
+      // generous margin just chain-loads several pages in one go.
+      { rootMargin: "300px" }
     );
     observer.observe(node);
     return () => observer.disconnect();
-  }, [hasMore, error, loadMore]);
+  }, [hasMore, error, loadMore, properties.length]);
 
   return (
     <>
-      <div className="grid grid-cols-2 gap-3 sm:flex sm:flex-col sm:gap-6">
+      {/* Counts what is actually loaded. This line lived in the server
+          component and read the first page's length, so it sat frozen at
+          "Showing 6 of 30" however far you scrolled. */}
+      <p className="text-sm text-muted-foreground">
+        Showing{" "}
+        <span className="font-medium text-navy">{properties.length}</span> of{" "}
+        <span className="font-medium text-navy">{totalCount}</span>{" "}
+        {totalCount === 1 ? "property" : "properties"}
+      </p>
+
+      <div className="mt-4 grid grid-cols-2 gap-3 sm:flex sm:flex-col sm:gap-6">
         {properties.map((property) => (
           <PropertyListCard key={property.id} property={property} />
         ))}
       </div>
 
       {hasMore && !error && (
+        // min-h keeps this a real target. Rendered empty between loads it
+        // collapsed to 0px, and a zero-height element is a fragile thing to
+        // hang an observer on.
         <div
           ref={sentinelRef}
-          className="mt-3 grid grid-cols-2 gap-3 sm:mt-6 sm:flex sm:flex-col sm:gap-6"
+          className="mt-3 grid min-h-px grid-cols-2 gap-3 sm:mt-6 sm:flex sm:flex-col sm:gap-6"
         >
           {loading && <PropertyListCardSkeleton />}
         </div>

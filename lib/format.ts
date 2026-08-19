@@ -1,4 +1,13 @@
-/** Formats a rupee amount using Indian Lakh/Crore short-form (e.g. "₹5.2 Cr", "₹75 L"). */
+/**
+ * Formats a rupee amount using Indian Lakh/Crore short-form ("₹5.2 Cr", "₹75 L").
+ *
+ * Rounds toward zero, not to nearest. A minimum ticket of ₹2,49,999 rendered
+ * as "₹2.5 L" under round-to-nearest, which overstates the entry price: a
+ * visitor reads that as the number they must have. Truncating means the
+ * displayed figure is never higher than the real one, so "from ₹2.4 L" is
+ * always a promise we can keep. Use `formatExactINR` where the precise figure
+ * matters, such as the amount somebody is committing.
+ */
 export function formatCompactINR(value: number): string {
   const abs = Math.abs(value);
 
@@ -50,7 +59,11 @@ export function formatMonths(months: number): string {
 }
 
 function trimDecimal(value: number): string {
-  return value % 1 === 0 ? value.toFixed(0) : value.toFixed(1);
+  if (value % 1 === 0) return value.toFixed(0);
+  // Truncate the second decimal rather than rounding it up — see
+  // formatCompactINR. Math.trunc keeps negatives moving toward zero too.
+  const truncated = Math.trunc(value * 10) / 10;
+  return truncated % 1 === 0 ? truncated.toFixed(0) : truncated.toFixed(1);
 }
 
 export function formatPercent(value: number): string {

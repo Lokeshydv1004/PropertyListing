@@ -25,7 +25,7 @@ export function ListingTypeBadge({
   return (
     <span
       className={cn(
-        "rounded-md px-2 py-0.5 text-[10px] font-semibold tracking-wide uppercase sm:px-2.5 sm:py-1 sm:text-[11px]",
+        "rounded-md px-2 py-0.5 text-[11px] font-semibold tracking-wide uppercase sm:px-2.5 sm:py-1",
         style[listingType],
         className
       )}
@@ -68,7 +68,7 @@ export function StatusBadge({
   return (
     <span
       className={cn(
-        "rounded-md px-2 py-0.5 text-[10px] font-semibold sm:px-2.5 sm:py-1 sm:text-xs",
+        "rounded-md px-2 py-0.5 text-[11px] font-semibold sm:px-2.5 sm:py-1 sm:text-xs",
         style[status],
         className
       )}

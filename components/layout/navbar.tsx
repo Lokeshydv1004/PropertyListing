@@ -14,14 +14,35 @@ import {
   SheetTrigger,
 } from "@/components/ui/sheet";
 import { cn } from "@/lib/utils";
+import { whatsappHref } from "@/lib/site-config";
+
+/**
+ * The "Login" button was a link to /contact.
+ *
+ * There is no authentication in this project, by design. A visitor who clicks
+ * Login expecting an account and lands on a lead form reads it as a
+ * bait-and-switch, assumes their session broke, and starts asking "where is
+ * my dashboard?" — a question the site cannot answer. Replaced with the
+ * highest-converting honest alternative: a direct line to a human.
+ */
+const ADVISOR_MESSAGE =
+  "Hi GharShare — I'd like to speak to an advisor about investing.";
 
 const NAV_LINKS = [
   { href: "/properties", label: "Properties" },
+  // Second, not buried at the end: it is the answer to "which one do I
+  // choose?", and that question is asked while the visitor is looking at
+  // Properties — the link next to it.
+  { href: "/invest-with-us", label: "Managed Portfolio" },
   { href: "/how-it-works", label: "How It Works" },
-  { href: "/#why-fractional", label: "Why GharShare" },
-  { href: "/faq", label: "FAQ" },
+  { href: "/insights", label: "Insights" },
   { href: "/contact", label: "Contact" },
 ];
+// "Why GharShare" and "FAQ" are deliberately absent from the header. Both are
+// still reachable — Why GharShare from the home page section itself, FAQ from
+// the footer and the home-page FAQ teaser — but with the managed portfolio
+// added, seven top-level links crowded the bar and pushed the two links that
+// actually convert (Properties, Managed Portfolio) into the noise.
 
 export function Navbar() {
   const pathname = usePathname();
@@ -60,7 +81,14 @@ export function Navbar() {
             transparent ? "text-white" : "text-navy"
           )}
         >
-          <Home className="size-6 text-gold" strokeWidth={2.25} />
+          <Home
+            className={cn(
+              "size-6",
+              transparent ? "text-gold" : "text-gold-700"
+            )}
+            strokeWidth={2.25}
+            aria-hidden="true"
+          />
           GharShare
         </Link>
 
@@ -83,7 +111,13 @@ export function Navbar() {
 
         <div className="hidden items-center gap-3 md:flex">
           <Button
-            render={<Link href="/contact" />}
+            render={
+              <Link
+                href={whatsappHref(ADVISOR_MESSAGE)}
+                target="_blank"
+                rel="noopener noreferrer"
+              />
+            }
             nativeButton={false}
             variant="outline"
             className={cn(
@@ -93,7 +127,7 @@ export function Navbar() {
                 : "border-border bg-background text-foreground"
             )}
           >
-            Login
+            Talk to an advisor
           </Button>
           <Button
             render={<Link href="/properties" />}
@@ -123,7 +157,11 @@ export function Navbar() {
           <SheetContent side="right" className="w-3/4 sm:max-w-sm">
             <SheetHeader>
               <SheetTitle className="flex items-center gap-2 text-navy">
-                <Home className="size-5 text-gold" strokeWidth={2.25} />
+                <Home
+                  className="size-5 text-gold-700"
+                  strokeWidth={2.25}
+                  aria-hidden="true"
+                />
                 GharShare
               </SheetTitle>
             </SheetHeader>
@@ -148,14 +186,20 @@ export function Navbar() {
                 nativeButton={false}
                 render={
                   <Button
-                    render={<Link href="/contact" />}
+                    render={
+                      <Link
+                        href={whatsappHref(ADVISOR_MESSAGE)}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                      />
+                    }
                     nativeButton={false}
                     variant="outline"
                     className="w-full"
                   />
                 }
               >
-                Login
+                Talk to an advisor
               </SheetClose>
               <SheetClose
                 nativeButton={false}

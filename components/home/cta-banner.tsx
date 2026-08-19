@@ -22,7 +22,7 @@ export function CtaBanner() {
             className="h-12 w-full shrink-0 gap-2 bg-gold px-6 text-base text-navy hover:bg-gold/90 sm:w-auto"
           >
             Explore Properties
-            <ArrowRight className="size-4" />
+            <ArrowRight className="size-4" aria-hidden="true" />
           </Button>
         </div>
         <div className="relative hidden w-1/5 shrink-0 lg:block">

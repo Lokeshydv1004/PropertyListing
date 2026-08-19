@@ -98,7 +98,7 @@ export function PropertyCard({ property }: { property: Property }) {
           {stats.map((stat) => (
             <div key={stat.label} className="min-w-0">
               <p
-                className="truncate text-[10px] text-muted-foreground sm:text-xs"
+                className="truncate text-[11px] text-muted-foreground sm:text-xs"
                 title={stat.label}
               >
                 {stat.label}

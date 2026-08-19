@@ -2,64 +2,67 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { useForm } from "react-hook-form";
+import { useRouter } from "next/navigation";
+import { useForm, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { CheckCircle2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { submitInterestLead } from "@/lib/actions/leads";
+import { formatCompactINR, formatExactINR } from "@/lib/format";
 import {
   interestFormSchema,
   type InterestFormValues,
 } from "@/lib/validation/interest";
+import { cn } from "@/lib/utils";
 import type { ListingType } from "@/db/schema";
 
 const COPY: Record<
   ListingType,
-  { cta: string; amountLabel: string; amountHint: string; success: string }
+  { cta: string; amountLabel: string; amountHint: string }
 > = {
   fractional: {
     cta: "Register interest",
     amountLabel: "Amount you're considering (₹)",
     amountHint: "Pre-filled with this property's minimum. Adjust as you like.",
-    success:
-      "An investment advisor will call you within 1 business day with the full documentation. There is no obligation at this stage.",
   },
   sale: {
     cta: "Enquire to buy",
     amountLabel: "Your budget (₹)",
     amountHint: "Optional — helps us tell you if the price has room to move.",
-    success:
-      "A property advisor will call you within 1 business day to arrange a site visit and share the title documents.",
   },
   rent: {
     cta: "Enquire to lease",
     amountLabel: "Your monthly budget (₹)",
     amountHint: "Optional — helps us shortlist other units in your range.",
-    success:
-      "A leasing advisor will call you within 1 business day to arrange a site visit and share the draft lease terms.",
   },
 };
 
+/** Multiples of the minimum ticket, for one-tap entry. */
+const CHIP_MULTIPLES = [1, 2, 5];
+
 export function InterestForm({
   propertyId,
+  propertyTitle,
   listingType,
   minInvestment,
 }: {
   propertyId: string;
+  propertyTitle: string;
   listingType: ListingType;
   minInvestment: string | null;
 }) {
+  const router = useRouter();
   const [submitError, setSubmitError] = useState<string | null>(null);
-  const [submitted, setSubmitted] = useState(false);
   const copy = COPY[listingType];
 
   const {
     register,
     handleSubmit,
-    formState: { errors, isSubmitting },
+    control,
+    setValue,
+    formState: { errors, isSubmitting, isSubmitSuccessful },
   } = useForm<InterestFormValues>({
     resolver: zodResolver(interestFormSchema),
     defaultValues: {
@@ -73,27 +76,38 @@ export function InterestForm({
     },
   });
 
+  // A bare number field gives no feedback on what was typed, and a mistyped
+  // zero is the difference between ₹2.5 L and ₹25 L. Echoing the figure back
+  // in words catches it before it reaches us.
+  const amountValue = useWatch({ control, name: "amountInterested" });
+  const amountNumber = Number(amountValue);
+  const amountPreview =
+    amountValue && Number.isFinite(amountNumber) && amountNumber > 0
+      ? `${formatExactINR(amountNumber)} · ${formatCompactINR(amountNumber)}`
+      : null;
+
+  const minTicket = minInvestment ? Number(minInvestment) : null;
+  const chips =
+    listingType === "fractional" && minTicket
+      ? CHIP_MULTIPLES.map((multiple) => minTicket * multiple)
+      : [];
+
   async function onSubmit(values: InterestFormValues) {
     setSubmitError(null);
-    const result = await submitInterestLead(propertyId, values);
+    const result = await submitInterestLead(propertyId, values, {
+      pageUrl: typeof window !== "undefined" ? window.location.href : undefined,
+    });
+
     if (result.success) {
-      setSubmitted(true);
+      // A real URL, not an inline panel: without a navigation there is no
+      // event for GA4 or an ad platform to attribute the conversion to, and
+      // the sidebar has no room to say what actually happens next.
+      router.push(
+        `/thank-you?type=interest&property=${encodeURIComponent(propertyTitle)}`
+      );
     } else {
       setSubmitError(result.error);
     }
-  }
-
-  if (submitted) {
-    return (
-      <div className="flex flex-col items-center gap-3 rounded-2xl bg-brand-green-light px-6 py-10 text-center">
-        <CheckCircle2 className="size-10 text-brand-green" aria-hidden="true" />
-        <h3 className="text-lg font-semibold text-navy">Enquiry received</h3>
-        {/* Says when and how, not just "our team will reach out". */}
-        <p className="text-sm leading-relaxed text-muted-foreground">
-          {copy.success}
-        </p>
-      </div>
-    );
   }
 
   return (
@@ -132,7 +146,7 @@ export function InterestForm({
           type="tel"
           inputMode="tel"
           autoComplete="tel"
-          placeholder="98765 43210"
+          placeholder="10-digit mobile number"
           aria-invalid={!!errors.phone}
           {...register("phone")}
         />
@@ -169,8 +183,44 @@ export function InterestForm({
           aria-describedby="interest-amount-hint"
           {...register("amountInterested")}
         />
-        <p id="interest-amount-hint" className="text-xs text-muted-foreground">
-          {copy.amountHint}
+
+        {chips.length > 0 && (
+          <div className="flex flex-wrap gap-2 pt-1">
+            {chips.map((amount, index) => {
+              const selected = Number(amountValue) === amount;
+              return (
+                <button
+                  key={amount}
+                  type="button"
+                  onClick={() =>
+                    setValue("amountInterested", String(amount), {
+                      shouldValidate: true,
+                    })
+                  }
+                  aria-pressed={selected}
+                  className={cn(
+                    "rounded-full border px-3 py-1.5 text-xs font-medium transition-colors",
+                    selected
+                      ? "border-brand-green bg-brand-green-light text-brand-green"
+                      : "border-border bg-card text-foreground/75 hover:border-brand-green hover:text-navy"
+                  )}
+                >
+                  {formatCompactINR(amount)}
+                  {index === 0 && (
+                    <span className="ml-1 text-muted-foreground">min</span>
+                  )}
+                </button>
+              );
+            })}
+          </div>
+        )}
+
+        <p
+          id="interest-amount-hint"
+          className="text-xs text-muted-foreground"
+          aria-live="polite"
+        >
+          {amountPreview ?? copy.amountHint}
         </p>
         {errors.amountInterested && (
           <p className="text-sm text-destructive">
@@ -201,10 +251,12 @@ export function InterestForm({
 
       <Button
         type="submit"
-        disabled={isSubmitting}
+        // Stays disabled through the redirect too — the navigation is not
+        // instant, and a second submit here creates a duplicate lead.
+        disabled={isSubmitting || isSubmitSuccessful}
         className="h-11 w-full bg-brand-green text-white hover:bg-brand-green/90"
       >
-        {isSubmitting ? "Submitting…" : copy.cta}
+        {isSubmitting || isSubmitSuccessful ? "Submitting…" : copy.cta}
       </Button>
 
       {/* Replaces "Your data is safe with us" — a claim with nothing behind

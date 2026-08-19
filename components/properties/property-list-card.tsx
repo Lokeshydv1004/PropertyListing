@@ -202,7 +202,7 @@ export function PropertyListCard({ property }: { property: Property }) {
               "₹15 Cr" told a mobile visitor this wasn't for them. */}
           <div className="mt-auto flex items-baseline justify-between gap-2 pt-1">
             <div className="min-w-0">
-              <p className="text-[10px] text-muted-foreground">
+              <p className="text-[11px] text-muted-foreground">
                 {isFractional ? "From" : big.label}
               </p>
               <p className="truncate text-sm font-semibold text-navy">
@@ -213,14 +213,14 @@ export function PropertyListCard({ property }: { property: Property }) {
             </div>
             {isFractional && property.estAnnualYield ? (
               <div className="shrink-0 text-right">
-                <p className="text-[10px] text-muted-foreground">Est. yield</p>
+                <p className="text-[11px] text-muted-foreground">Est. yield</p>
                 <p className="text-sm font-semibold text-brand-green">
                   {property.estAnnualYield}%
                 </p>
               </div>
             ) : (
               <div className="shrink-0 text-right">
-                <p className="text-[10px] text-muted-foreground">Area</p>
+                <p className="text-[11px] text-muted-foreground">Area</p>
                 <p className="text-sm font-semibold text-navy">
                   {Number(property.areaSqft).toLocaleString("en-IN")}
                 </p>

@@ -172,6 +172,82 @@ export const properties = pgTable(
     highlights: text("highlights").array().notNull().default([]),
     tags: text("tags").array().notNull().default([]),
 
+    // ---- Fee transparency ----------------------------------------------
+    // "What does this platform charge" is the most-searched question about
+    // every fractional platform in India, and the detail page could not answer
+    // it because there was nowhere to store the answer. Nullable: a listing
+    // with no fee recorded shows nothing rather than an invented zero.
+    /** One-time fee on capital committed, as a percentage. */
+    platformFeePct: numeric("platform_fee_pct"),
+    /** Annual management fee, as a percentage of rent collected. */
+    managementFeePct: numeric("management_fee_pct"),
+    /** Exit or performance fee, as a percentage of gains. */
+    exitFeePct: numeric("exit_fee_pct"),
+
+    // ---- Showing the yield's working -----------------------------------
+    /** Occupancy as a percentage. A yield is only as good as this number. */
+    occupancyRate: numeric("occupancy_rate"),
+
+    // ---- Tenant, for leased commercial assets --------------------------
+    // For a leased asset the lease *is* the investment, and none of it could
+    // be shown: who the tenant is, how long they are committed, when it ends.
+    tenantName: text("tenant_name"),
+    leaseEndDate: date("lease_end_date"),
+
+    // ---- Location, for the map ------------------------------------------
+    // "Bandra West" means nothing to an investor in Bangalore.
+    latitude: numeric("latitude"),
+    longitude: numeric("longitude"),
+
+    // ---- Documents and risks --------------------------------------------
+    /** Supabase Storage URLs — title report, valuation, legal summary.
+     *  Downloadable documents are the strongest trust signal available. */
+    documents: text("documents").array().notNull().default([]),
+    /** Risks specific to THIS property. Generic FAQ risk text is not the
+     *  same as "the lease on this unit expires in 2029". */
+    propertyRisks: text("property_risks").array().notNull().default([]),
+
+    // ---- Operations ------------------------------------------------------
+    /** Named manager. "A professional property manager" persuades nobody. */
+    managedBy: text("managed_by"),
+    yearBuilt: integer("year_built"),
+
+    /**
+     * Deliberate promotion, replacing "whatever is closest to fully funded".
+     *
+     * getFeaturedProperties() ranks by funding progress, so the home page
+     * promotes the listings that need promotion least — the ones about to
+     * close — while a new raise with no momentum gets no traffic at all.
+     */
+    isFeatured: boolean("is_featured").notNull().default(false),
+
+    /**
+     * Whether the public site may show this listing at all.
+     *
+     * There was no draft state before this: a row existed and was live, so a
+     * half-entered listing was visible the moment it was saved. `off_market`
+     * is not the same thing — that says something about the asset, this says
+     * something about our readiness to show it.
+     *
+     * Defaults to false so anything created from now on starts as a draft.
+     * Every existing row was backfilled to true in the same migration; had it
+     * not been, the whole catalogue would have vanished on deploy.
+     */
+    isPublished: boolean("is_published").notNull().default(false),
+
+    /** When it first went live — "recently published", not "recently typed". */
+    publishedAt: timestamp("published_at", { withTimezone: true }),
+
+    /**
+     * Stamped by Drizzle on every update, so "what changed recently" is
+     * answerable and the console can tell when two people have saved the
+     * same listing over each other.
+     */
+    updatedAt: timestamp("updated_at", { withTimezone: true })
+      .notNull()
+      .defaultNow()
+      .$onUpdate(() => new Date()),
+
     createdAt: timestamp("created_at", { withTimezone: true })
       .notNull()
       .defaultNow(),
@@ -188,6 +264,9 @@ export const properties = pgTable(
     // 13 rows with an identical timestamp), which made OFFSET paging return
     // duplicate rows and skip others entirely.
     index("properties_created_at_id_idx").on(table.createdAt, table.id),
+    // Every public read now filters on this, so it belongs in front of the
+    // other predicates rather than behind a sequential scan.
+    index("properties_is_published_idx").on(table.isPublished),
   ]
 );
 

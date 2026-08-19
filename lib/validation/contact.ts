@@ -3,6 +3,10 @@ import { phoneSchema } from "./interest";
 
 export const ENQUIRY_TYPES = [
   { value: "investor", label: "I want to invest" },
+  {
+    value: "managed_plan",
+    label: "I can't choose a property — tell me about the managed portfolio",
+  },
   { value: "buy", label: "I want to buy a property" },
   { value: "rent", label: "I want to lease a space" },
   { value: "list_property", label: "I want to list my property" },

@@ -9,7 +9,7 @@ export function FeaturedProperties({ properties }: { properties: Property[] }) {
   }
 
   return (
-    <section className="bg-white py-8">
+    <section className="bg-white py-8 sm:py-10">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div>
             <div className="flex items-center justify-between">
@@ -18,10 +18,10 @@ export function FeaturedProperties({ properties }: { properties: Property[] }) {
               </h2>
               <Link
                 href="/properties"
-                className="hidden shrink-0 items-center gap-1.5 text-sm font-medium text-gold hover:text-gold/80 sm:flex"
+                className="hidden shrink-0 items-center gap-1.5 text-sm font-medium text-gold-700 hover:text-gold-700/80 sm:flex"
               >
                 View All Properties
-                <ArrowRight className="size-4" />
+                <ArrowRight className="size-4" aria-hidden="true" />
               </Link>
             </div>
 
@@ -39,10 +39,10 @@ export function FeaturedProperties({ properties }: { properties: Property[] }) {
             <div className="mt-6 flex justify-center sm:hidden">
               <Link
                 href="/properties"
-                className="flex items-center gap-1.5 text-sm font-medium text-gold"
+                className="flex items-center gap-1.5 text-sm font-medium text-gold-700"
               >
                 View All Properties
-                <ArrowRight className="size-4" />
+                <ArrowRight className="size-4" aria-hidden="true" />
               </Link>
             </div>
           </div>

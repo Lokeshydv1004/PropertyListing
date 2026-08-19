@@ -1,4 +1,4 @@
-import { and, asc, desc, eq, gte, inArray, lte, ne, sql } from "drizzle-orm";
+import { and, asc, desc, eq, inArray, lte, ne, sql } from "drizzle-orm";
 import { db } from "@/db/client";
 import {
   buildings,
@@ -46,8 +46,20 @@ export type PropertyPage = {
 /** A listing together with its parent mall/building, when it has one. */
 export type PropertyWithBuilding = Property & { building: Building | null };
 
+/**
+ * The single rule every public read in this file obeys.
+ *
+ * `is_published` is the difference between "this row exists" and "the world
+ * may see it". Miss it in one query and a half-written draft — wrong price,
+ * placeholder description, no photographs — is live on a page asking people
+ * for lakhs of rupees. The admin console has its own queries in
+ * lib/queries/admin-properties.ts and is the only thing that reads drafts.
+ */
+const isPublic = eq(properties.isPublished, true);
+
 function buildConditions(filters: PropertyFilters) {
   return [
+    isPublic,
     filters.listingType
       ? eq(properties.listingType, filters.listingType)
       : undefined,
@@ -153,13 +165,23 @@ export async function getPropertiesCount(
 }
 
 export async function getPropertyBySlug(
-  slug: string
+  slug: string,
+  /**
+   * Only the admin draft preview passes this. It bypasses the published
+   * filter so the team can see a draft exactly as it will look, on the real
+   * page, before anyone else can.
+   */
+  options: { includeUnpublished?: boolean } = {}
 ): Promise<PropertyWithBuilding | undefined> {
   const [row] = await db
     .select({ property: properties, building: buildings })
     .from(properties)
     .leftJoin(buildings, eq(properties.buildingId, buildings.id))
-    .where(eq(properties.slug, slug))
+    .where(
+      options.includeUnpublished
+        ? eq(properties.slug, slug)
+        : and(eq(properties.slug, slug), isPublic)
+    )
     .limit(1);
 
   if (!row) return undefined;
@@ -198,6 +220,7 @@ export async function getSimilarProperties(
         .from(properties)
         .where(
           and(
+            isPublic,
             eq(properties.buildingId, property.buildingId),
             ne(properties.id, property.id)
           )
@@ -214,6 +237,7 @@ export async function getSimilarProperties(
         .from(properties)
         .where(
           and(
+            isPublic,
             eq(properties.city, property.city),
             eq(properties.listingType, property.listingType),
             ne(properties.id, property.id)
@@ -231,6 +255,7 @@ export async function getSimilarProperties(
         .from(properties)
         .where(
           and(
+            isPublic,
             eq(properties.listingType, property.listingType),
             ne(properties.id, property.id)
           )
@@ -243,13 +268,28 @@ export async function getSimilarProperties(
   return collected.slice(0, limit);
 }
 
+/**
+ * What the home page promotes.
+ *
+ * This used to rank by funding progress descending, which meant the home
+ * page's most valuable real estate promoted the raises closest to closing —
+ * the ones that needed promotion least — while a new listing with no momentum
+ * got no traffic at all and stayed that way.
+ *
+ * Now: anything explicitly flagged `isFeatured` comes first, so the team can
+ * promote deliberately. Everything after that is ordered by funding progress
+ * *ascending*, so home-page traffic goes to the properties still raising.
+ * Fully funded and closed listings are excluded either way — there is nothing
+ * to act on.
+ */
 export async function getFeaturedProperties(limit = 3): Promise<Property[]> {
   return db
     .select()
     .from(properties)
-    .where(eq(properties.status, "fundraising"))
+    .where(and(isPublic, eq(properties.status, "fundraising")))
     .orderBy(
-      desc(
+      desc(properties.isFeatured),
+      asc(
         sql`(${properties.amountRaised}::numeric / nullif(${properties.fundingTarget}::numeric, 0))`
       ),
       asc(properties.id)
@@ -264,17 +304,19 @@ export async function getPlatformStats() {
       fundedCount: sql<number>`count(*) filter (where ${properties.status} = 'fully_funded')::int`,
       openCount: sql<number>`count(*) filter (where ${properties.status} in ('fundraising', 'available'))::int`,
       totalRaised: sql<string>`coalesce(sum(${properties.amountRaised}), 0)`,
-      avgYield: sql<string>`coalesce(avg(${properties.estAnnualYield}), 0)`,
       cityCount: sql<number>`count(distinct ${properties.city})::int`,
     })
-    .from(properties);
+    .from(properties)
+    .where(isPublic);
 
   return {
     propertyCount: row?.propertyCount ?? 0,
     fundedCount: row?.fundedCount ?? 0,
     openCount: row?.openCount ?? 0,
     totalRaised: Number(row?.totalRaised ?? 0),
-    avgYield: Number(row?.avgYield ?? 0),
+    // avgYield was aggregated on every home-page load and read by nobody. An
+    // average across fractional, sale and rent listings is not a meaningful
+    // figure anyway — it averages three different things.
     cityCount: row?.cityCount ?? 0,
   };
 }
@@ -292,6 +334,7 @@ export async function getMinTicket(): Promise<number | null> {
     .from(properties)
     .where(
       and(
+        isPublic,
         eq(properties.listingType, "fractional"),
         eq(properties.status, "fundraising")
       )
@@ -300,27 +343,42 @@ export async function getMinTicket(): Promise<number | null> {
   return row?.min ? Number(row.min) : null;
 }
 
-/** Distinct values actually present in the catalogue, for the filter bar. */
+/**
+ * Distinct values actually present in the catalogue, for the filter bar.
+ *
+ * One query, not three in parallel: three concurrent queries against a cold
+ * pool each need their own physical connection, and opening several fresh
+ * connections to the Supabase pooler at once is slow enough (~1.5s each from
+ * this network) that one would routinely lose the race and get cancelled by
+ * the server's statement_timeout — crashing the whole properties page.
+ *
+ * Deliberately not wrapped in `unstable_cache`: it requires Next's own
+ * request-scoped incremental-cache context to run at all (throws
+ * "incrementalCache missing" outside one), and in this dev setup it was
+ * reproduced hanging the whole response indefinitely instead of erroring —
+ * headers flush, the body never finishes. Given this query is already a
+ * single sub-second round trip, the caching wasn't worth that risk.
+ */
 export async function getPropertyFilterOptions() {
-  const [cityRows, categoryRows, listingTypeRows] = await Promise.all([
-    db
-      .selectDistinct({ city: properties.city })
-      .from(properties)
-      .orderBy(asc(properties.city)),
-    db
-      .selectDistinct({ category: properties.category })
-      .from(properties)
-      .orderBy(asc(properties.category)),
-    db
-      .selectDistinct({ listingType: properties.listingType })
-      .from(properties)
-      .orderBy(asc(properties.listingType)),
-  ]);
+  const [row] = await db
+    .select({
+      cities: sql<
+        string[]
+      >`coalesce(array_remove(array_agg(distinct ${properties.city} order by ${properties.city}), null), '{}')`,
+      categories: sql<
+        PropertyCategory[]
+      >`coalesce(array_agg(distinct ${properties.category} order by ${properties.category}), '{}')`,
+      listingTypes: sql<
+        ListingType[]
+      >`coalesce(array_agg(distinct ${properties.listingType} order by ${properties.listingType}), '{}')`,
+    })
+    .from(properties)
+    .where(isPublic);
 
   return {
-    cities: cityRows.map((row) => row.city).filter(Boolean),
-    categories: categoryRows.map((row) => row.category),
-    listingTypes: listingTypeRows.map((row) => row.listingType),
+    cities: row?.cities ?? [],
+    categories: row?.categories ?? [],
+    listingTypes: row?.listingTypes ?? [],
   };
 }
 
@@ -334,6 +392,7 @@ export async function getListingTypeCounts(): Promise<
       count: sql<number>`count(*)::int`,
     })
     .from(properties)
+    .where(isPublic)
     .groupBy(properties.listingType);
 
   const counts: Record<ListingType, number> = {
@@ -367,7 +426,7 @@ export async function getUnitsInBuilding(
   return db
     .select()
     .from(properties)
-    .where(eq(properties.buildingId, buildingId))
+    .where(and(isPublic, eq(properties.buildingId, buildingId)))
     .orderBy(asc(properties.floorLabel), asc(properties.unitNumber));
 }
 

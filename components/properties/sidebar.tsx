@@ -7,10 +7,9 @@ import {
   FileText,
   ShieldCheck,
   TrendingUp,
-  Users,
   Wallet,
 } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { NotifyForm } from "@/components/properties/notify-form";
 
 const WHY_INVEST_POINTS = [
   "Fractional ownership in premium real estate",
@@ -45,7 +44,10 @@ export function PropertiesSidebar() {
         <ul className="mt-4 space-y-3">
           {WHY_INVEST_POINTS.map((point) => (
             <li key={point} className="flex items-start gap-2.5 text-sm text-foreground/80">
-              <CheckCircle2 className="mt-0.5 size-4 shrink-0 text-brand-green" />
+              <CheckCircle2
+                className="mt-0.5 size-4 shrink-0 text-brand-green"
+                aria-hidden="true"
+              />
               {point}
             </li>
           ))}
@@ -55,12 +57,12 @@ export function PropertiesSidebar() {
           className="mt-5 flex items-center gap-1.5 text-sm font-medium text-navy hover:text-brand-green"
         >
           Learn more about our platform
-          <ArrowRight className="size-4" />
+          <ArrowRight className="size-4" aria-hidden="true" />
         </Link>
 
         <div className="mt-6 border-t border-border pt-5">
           <div className="flex items-center gap-2">
-            <FileText className="size-4 text-gold" />
+            <FileText className="size-4 text-gold-700" aria-hidden="true" />
             <h3 className="font-semibold text-navy">Market Snapshot</h3>
           </div>
           <p className="text-xs text-muted-foreground">India real estate overview</p>
@@ -93,7 +95,7 @@ export function PropertiesSidebar() {
 
       <div className="hidden rounded-2xl bg-navy p-6 text-white lg:block">
         <span className="flex size-11 items-center justify-center rounded-full bg-white/10 text-gold">
-          <Bell className="size-5" />
+          <Bell className="size-5" aria-hidden="true" />
         </span>
         <h2 className="mt-4 text-lg font-semibold">
           New properties.
@@ -103,13 +105,12 @@ export function PropertiesSidebar() {
         <p className="mt-2 text-sm text-white/70">
           Be the first to know about our latest investment opportunities.
         </p>
-        <Button
-          render={<Link href="/contact" />}
-          nativeButton={false}
-          className="mt-5 w-full bg-gold text-navy hover:bg-gold/90"
-        >
-          Notify Me
-        </Button>
+        {/* One field, inline. This was a link to the five-field contact form,
+            which is far more than an email alert is worth to the visitor. */}
+        <NotifyForm className="mt-5" />
+        <p className="mt-3 text-[11px] leading-snug text-white/50">
+          Email only, and only when something new lists. Unsubscribe any time.
+        </p>
       </div>
     </aside>
   );
@@ -117,19 +118,14 @@ export function PropertiesSidebar() {
 
 export function NotifyBarMobile() {
   return (
-    <div className="flex items-center justify-between gap-3 rounded-xl bg-navy px-4 py-3 text-white lg:hidden">
+    <div className="rounded-xl bg-navy px-4 py-3 text-white lg:hidden">
       <div className="flex min-w-0 items-center gap-2.5">
-        <Bell className="size-4 shrink-0 text-gold" />
+        <Bell className="size-4 shrink-0 text-gold" aria-hidden="true" />
         <p className="truncate text-sm font-medium">
           New properties. Get notified first.
         </p>
       </div>
-      <Link
-        href="/contact"
-        className="shrink-0 text-sm font-semibold text-gold hover:text-gold/80"
-      >
-        Notify Me
-      </Link>
+      <NotifyForm className="mt-3" />
     </div>
   );
 }
@@ -146,7 +142,7 @@ export function TrustPanel() {
       icon: CheckCircle2,
       title: "Secure Ownership",
       sub: "Legally structured",
-      iconClassName: "bg-gold-light text-gold",
+      iconClassName: "bg-gold-light text-gold-700",
     },
     {
       icon: FileText,
@@ -168,7 +164,7 @@ export function TrustPanel() {
             <span
               className={`flex size-9 shrink-0 items-center justify-center rounded-full sm:size-10 ${item.iconClassName}`}
             >
-              <Icon className="size-4" />
+              <Icon className="size-4" aria-hidden="true" />
             </span>
             <div className="leading-tight">
               <p className="text-xs font-medium text-foreground sm:text-sm">

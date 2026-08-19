@@ -15,12 +15,18 @@ export default function PropertyDetailLoading() {
           </div>
 
           <div className="mt-8 space-y-2">
-            <Skeleton className="h-5 w-24" />
-            <Skeleton className="h-8 w-64" />
+            <Skeleton className="h-5 w-24 rounded-full" />
+            <Skeleton className="h-9 w-72" />
             <Skeleton className="h-5 w-48" />
           </div>
 
-          <Skeleton className="mt-5 h-2 w-full" />
+          <div className="mt-5 flex flex-wrap gap-8">
+            {Array.from({ length: 3 }).map((_, i) => (
+              <Skeleton key={i} className="h-9 w-28" />
+            ))}
+          </div>
+
+          <Skeleton className="mt-8 h-56 w-full rounded-3xl" />
 
           <Skeleton className="mt-8 h-24 w-full rounded-2xl" />
 
@@ -31,7 +37,7 @@ export default function PropertyDetailLoading() {
           </div>
         </div>
 
-        <Skeleton className="h-96 w-full rounded-2xl" />
+        <Skeleton className="h-[420px] w-full rounded-2xl" />
       </div>
     </div>
   );

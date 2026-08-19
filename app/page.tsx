@@ -1,6 +1,8 @@
 import { Hero } from "@/components/home/hero";
-import { HowItWorksSummary } from "@/components/home/how-it-works-summary";
+import { StatsBar } from "@/components/home/stats-bar";
 import { FeaturedProperties } from "@/components/home/featured-properties";
+import { WhyFractional } from "@/components/home/why-fractional";
+import { TrustStrip } from "@/components/home/trust-strip";
 import { CtaBanner } from "@/components/home/cta-banner";
 import { getFeaturedProperties, getPlatformStats } from "@/lib/queries/properties";
 
@@ -17,13 +19,16 @@ export default async function Home() {
 
   return (
     <>
-      <Hero
+      <Hero />
+      <StatsBar
         propertyCount={stats.propertyCount}
+        fundedCount={stats.fundedCount}
         totalRaised={stats.totalRaised}
-        avgYield={stats.avgYield}
+        cityCount={stats.cityCount}
       />
-      <HowItWorksSummary />
       <FeaturedProperties properties={featuredProperties} />
+      <WhyFractional />
+      {/* <TrustStrip /> */}
       <CtaBanner />
     </>
   );

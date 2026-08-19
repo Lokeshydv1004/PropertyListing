@@ -10,10 +10,10 @@ const COMPANY_LINKS = [{ href: "/contact", label: "Contact" }];
 
 export function Footer() {
   return (
-    <footer className="border-t border-border bg-navy text-white/70">
-      <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
-        <div className="grid grid-cols-1 gap-10 sm:grid-cols-3">
-          <div>
+    <footer className="border-t border-border bg-[#032E24] text-white/70">
+      <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 sm:py-12 lg:px-8">
+        <div className="grid grid-cols-2 gap-6 sm:grid-cols-3 sm:gap-10">
+          <div className="col-span-2 sm:col-span-1">
             <Link
               href="/"
               className="flex items-center gap-2 text-lg font-semibold text-white"
@@ -63,7 +63,7 @@ export function Footer() {
           </div>
         </div>
 
-        <div className="mt-10 border-t border-white/10 pt-6 text-xs">
+        <div className="mt-8 border-t border-white/10 pt-5 text-xs sm:mt-10 sm:pt-6">
           © {new Date().getFullYear()} GharShare. All rights reserved.
         </div>
       </div>

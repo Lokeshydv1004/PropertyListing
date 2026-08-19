@@ -9,11 +9,16 @@
   --color-foreground: var(--foreground);
   --font-sans: var(--font-inter);
   --font-mono: var(--font-geist-mono);
+  --font-serif: var(--font-playfair);
   --font-heading: var(--font-sans);
   --color-navy: var(--navy);
   --color-navy-light: var(--navy-light);
   --color-brand-green: var(--brand-green);
   --color-brand-green-light: var(--brand-green-light);
+  --color-gold: var(--gold);
+  --color-gold-light: var(--gold-light);
+  --color-gold-700: var(--gold-700);
+  --color-cream: var(--cream);
   --color-sidebar-ring: var(--sidebar-ring);
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
@@ -53,29 +58,36 @@
 }
 
 :root {
-  --navy: #16324f;
-  --navy-light: #eaf0f6;
-  --brand-green: #0ea671;
-  --brand-green-light: #e3f7ee;
+  --navy: #063d2f;
+  --navy-light: #eef3ea;
+  --brand-green: #15794d;
+  --brand-green-light: #e2f0e7;
+  --gold: #d9a441;
+  --gold-light: #f8eed9;
+  /* Accessible gold for text on white or gold-light. The brand gold
+     (#d9a441) measures ~2.3:1 on white — well below the 4.5:1 AA floor —
+     so it is for fills and dark backgrounds only, never for body text. */
+  --gold-700: #8a5f10;
+  --cream: #faf7f0;
 
-  --background: oklch(1 0 0);
-  --foreground: #16324f;
+  --background: var(--cream);
+  --foreground: #1b201c;
   --card: oklch(1 0 0);
-  --card-foreground: #16324f;
+  --card-foreground: #1b201c;
   --popover: oklch(1 0 0);
-  --popover-foreground: #16324f;
-  --primary: #16324f;
+  --popover-foreground: #1b201c;
+  --primary: #063d2f;
   --primary-foreground: oklch(0.985 0 0);
-  --secondary: #eaf0f6;
-  --secondary-foreground: #16324f;
-  --muted: oklch(0.97 0 0);
-  --muted-foreground: oklch(0.5 0 0);
-  --accent: #0ea671;
-  --accent-foreground: oklch(0.985 0 0);
+  --secondary: #eef3ea;
+  --secondary-foreground: #063d2f;
+  --muted: #f2efe6;
+  --muted-foreground: #6b6f68;
+  --accent: #d9a441;
+  --accent-foreground: #1b201c;
   --destructive: oklch(0.577 0.245 27.325);
-  --border: oklch(0.922 0 0);
-  --input: oklch(0.922 0 0);
-  --ring: #0ea671;
+  --border: #e7e2d3;
+  --input: #e7e2d3;
+  --ring: #15794d;
   --chart-1: oklch(0.87 0 0);
   --chart-2: oklch(0.556 0 0);
   --chart-3: oklch(0.439 0 0);
@@ -135,5 +147,42 @@
   }
   html {
     @apply font-sans;
+  }
+}
+/**
+ * An always-visible scrollbar for an inner scroll pane.
+ *
+ * The results column on /properties scrolls independently of the page, and
+ * the platform's default overlay scrollbar only appears while the user is
+ * actively scrolling — so there was nothing to indicate the pane was
+ * scrollable at all, or how far through it you were.
+ *
+ * `scrollbar-gutter: stable` reserves the track's width up front, so the
+ * cards don't shift sideways the moment the bar appears. The standard
+ * properties cover Firefox and current Chromium; the ::-webkit rules are the
+ * fallback for older WebKit, which ignores them when the standard ones apply.
+ */
+@layer components {
+  .scroll-pane {
+    scrollbar-width: thin;
+    scrollbar-color: var(--border) transparent;
+    scrollbar-gutter: stable;
+  }
+
+  .scroll-pane::-webkit-scrollbar {
+    width: 8px;
+  }
+
+  .scroll-pane::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  .scroll-pane::-webkit-scrollbar-thumb {
+    background-color: var(--border);
+    border-radius: 9999px;
+  }
+
+  .scroll-pane::-webkit-scrollbar-thumb:hover {
+    background-color: var(--muted-foreground);
   }
 }

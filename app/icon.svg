@@ -1,0 +1,7 @@
+<!-- Replaces the create-next-app default favicon, which shipped the Next.js
+     logo on every open tab of an investment platform. A flat mark, because a
+     favicon renders at 16px and detail is lost there. -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <rect width="64" height="64" rx="14" fill="#032E24"/>
+  <path d="M32 13 L52 29 L52 51 L38 51 L38 39 L26 39 L26 51 L12 51 L12 29 Z" fill="#D9A441"/>
+</svg>

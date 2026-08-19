@@ -79,11 +79,49 @@ export async function updateAdminSession(
     },
   });
 
-  // Must run before the response is returned: a refresh that completes after
-  // the response is committed cannot write its cookies and is lost.
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  /**
+   * Bounded, and allowed to fail.
+   *
+   * `getUser()` is a network round trip to Supabase Auth, and this runs on
+   * every admin request — including every prefetch. On Netlify this proxy is
+   * an edge function with a hard abort budget, and a slow response there does
+   * not degrade: it kills the whole request with "the edge function timed
+   * out", which is what was happening in production.
+   *
+   * So it races a timer. If Supabase answers in time we get a verified user
+   * and any refreshed cookies. If it doesn't, we fall back to the optimistic
+   * check below rather than hanging.
+   *
+   * This costs nothing in security. The proxy was never the real guard —
+   * `requireAdminPage()` and `requireAdmin()` resolve the session *and* the
+   * allowlist server-side on every page and every action, and they are what
+   * actually decides. Next's own guidance for Proxy says the same: read the
+   * cookie optimistically here, verify at the data layer.
+   */
+  const verified = await Promise.race([
+    supabase.auth
+      .getUser()
+      .then((result) => result.data.user)
+      .catch(() => null),
+    new Promise<undefined>((resolve) => setTimeout(() => resolve(undefined), 2500)),
+  ]);
+
+  /**
+   * Did the browser present a session cookie at all?
+   *
+   * Supabase names it `sb-<project-ref>-auth-token`, splitting it into
+   * `.0`/`.1` chunks when it outgrows a single cookie. Presence proves
+   * nothing about validity — a forged value gets past this and is then
+   * rejected by the data layer — but absence is conclusive, and it is what
+   * lets a signed-out visitor be bounced without asking Supabase anything.
+   */
+  const hasSessionCookie = request.cookies
+    .getAll()
+    .some((cookie) => /^sb-.*-auth-token(\.\d+)?$/.test(cookie.name));
+
+  // `undefined` means the check timed out; `null` means Supabase answered and
+  // said nobody is signed in. Only the second is a definite no.
+  const user = verified === undefined ? (hasSessionCookie ? "unverified" : null) : verified;
 
   const { pathname, search } = request.nextUrl;
 

@@ -12,7 +12,30 @@ function getConnectionString(): string {
   return value;
 }
 
-const MAX_CONNECTIONS = Number(process.env.DB_POOL_MAX ?? 1);
+/**
+ * Three, not one.
+ *
+ * With a pool of one, a single wedged socket is a total outage for that
+ * container: every query in the request queues behind the dead connection,
+ * and the admin console's layout and page together fire around ten of them.
+ * Three means one bad socket costs one query its timeout instead of all of
+ * them, and it lets the overview page's `Promise.all` actually run in
+ * parallel rather than serialising through a single wire.
+ *
+ * Still small on purpose. Supabase's transaction pooler is shared across
+ * every concurrent Lambda, so this is per-container, not per-site.
+ */
+const MAX_CONNECTIONS = Number(process.env.DB_POOL_MAX ?? 3);
+
+/**
+ * How long any single query may take before withDbRetry gives up on it.
+ *
+ * Sized against Netlify's 30s function limit, not against how slow a query
+ * ought to be: two bounded attempts plus a connection reset has to finish
+ * with room to spare, or the runtime kills the function and serves its own
+ * crash page instead of ours.
+ */
+export const QUERY_TIMEOUT_MS = Number(process.env.DB_QUERY_TIMEOUT_MS ?? 8000);
 
 type DbInstance = {
   client: ReturnType<typeof postgres>;
@@ -27,14 +50,29 @@ function createDbInstance(): DbInstance {
   const client = postgres(getConnectionString(), {
     prepare: false,
     max: MAX_CONNECTIONS,
-    idle_timeout: 120,
-    connect_timeout: 30,
+
+    // Shorter than the pooler's own idle cutoff and far shorter than the
+    // gap between requests on a quiet site, so postgres.js discards a
+    // connection itself rather than handing back one that died while the
+    // Lambda was frozen. This does not fix the race — a container can always
+    // be thawed onto a stale socket — it just narrows the window.
+    idle_timeout: 20,
+
+    // Was 30, i.e. exactly Netlify's function limit, which meant the runtime
+    // always killed the function before postgres.js gave up. Now it fails
+    // early enough for withDbRetry to reset and try again within budget.
+    connect_timeout: 10,
 
     // connect_timeout only bounds the TCP handshake. Nothing bounded how
     // long a query could sit waiting on a response after that — so a query
     // the pooler silently dropped or never answered (reproduced repeatedly
     // against the transaction pooler on this project) hung every request
     // behind it forever instead of failing and letting withDbRetry recover.
+    //
+    // statement_timeout is the server-side half of that bound and only helps
+    // once the query actually reaches Postgres; withDbRetry's QUERY_TIMEOUT_MS
+    // is the client-side half, and it is the one that catches a socket the
+    // query never left.
     connection: {
       statement_timeout: 10000,
     },
@@ -98,8 +136,23 @@ export async function resetDbConnection() {
 
   const oldClient = dbInstance.client;
 
+  // Bounded, because this runs on the recovery path.
+  //
+  // `end({ timeout: 0 })` is meant to destroy sockets immediately, but this
+  // is called precisely when a socket is already misbehaving — and an await
+  // that never settles here would reintroduce the exact hang the timeout in
+  // withDbRetry exists to prevent, one layer further down. Whether the close
+  // completes does not actually matter: the reference is dropped either way
+  // and the replacement below never touches it again.
   try {
-    await oldClient.end({ timeout: 0 });
+    await Promise.race([
+      oldClient.end({ timeout: 0 }),
+      new Promise<void>((resolve) => {
+        const timer = setTimeout(resolve, 2000);
+        // Not worth keeping the Lambda's event loop alive for.
+        timer.unref?.();
+      }),
+    ]);
   } catch {
     // console.error("[db] error closing old connection:", error);
   }

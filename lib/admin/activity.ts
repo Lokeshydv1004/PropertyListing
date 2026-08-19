@@ -1,6 +1,7 @@
 import "server-only";
 
 import { db } from "@/db/client";
+import { withDbRetry } from "@/lib/with-db-retry";
 import {
   adminActivity,
   type AdminAction,
@@ -24,16 +25,21 @@ export async function logActivity(input: {
   entityLabel?: string | null;
   changedFields?: Record<string, { from: unknown; to: unknown }> | null;
 }): Promise<void> {
+  // Bounded like every other query on the admin path. An audit-log write is
+  // the least important thing in any request that makes one, and it must
+  // never be the reason a mutation hangs until the function is killed.
   try {
-    await db.insert(adminActivity).values({
-      actorId: input.actor.id,
-      actorEmail: input.actor.email,
-      action: input.action,
-      entityType: input.entityType,
-      entityId: input.entityId ?? null,
-      entityLabel: input.entityLabel ?? null,
-      changedFields: input.changedFields ?? null,
-    });
+    await withDbRetry(() =>
+      db.insert(adminActivity).values({
+        actorId: input.actor.id,
+        actorEmail: input.actor.email,
+        action: input.action,
+        entityType: input.entityType,
+        entityId: input.entityId ?? null,
+        entityLabel: input.entityLabel ?? null,
+        changedFields: input.changedFields ?? null,
+      })
+    );
   } catch {
     // console.error("[admin] failed to write activity log", error);
   }
